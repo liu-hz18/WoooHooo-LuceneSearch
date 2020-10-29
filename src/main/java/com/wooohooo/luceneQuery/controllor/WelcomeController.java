@@ -78,12 +78,12 @@ public class WelcomeController
                     BooleanClause.Occur.SHOULD};
             //QueryParser queryParser = new QueryParser(queryParam, analyzer);
             Query query = MultiFieldQueryParser.parse(queryContent,new String[]{"content","title"}, flags, analyzer);
-            TopDocs topDocs = searcher.search(query, page * number);
+            TopDocs topDocs = searcher.search(query, (page+1) * number);
             jsonArray = new JSONArray();
             int index = 0;
             //需要返回的字段
             Set<String>tag = new HashSet();
-            tag.add("_id"); tag.add("content"); tag.add("publish_time");
+            tag.add("_id"); tag.add("content"); tag.add("publish_time"); tag.add("top_img");
             tag.add("url"); tag.add("source"); tag.add("imageurl"); tag.add("title");
             for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                 index++;

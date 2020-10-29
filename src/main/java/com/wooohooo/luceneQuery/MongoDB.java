@@ -44,7 +44,7 @@ public class MongoDB
         int count = (int)collection.countDocuments();
         System.out.println("count: "+count);
         //每次读取50000条
-        int limitSize = 30000;
+        int limitSize = 10000;
         MongoCursor cursor = null;
         cursor = collection.find().limit(limitSize).iterator();
         int num = 0;

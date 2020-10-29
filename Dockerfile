@@ -13,5 +13,4 @@ RUN mvn -q -s settings.xml package -DskipTests
 
 EXPOSE 80
 
-RUN mvn compile
 CMD mvn exec:java -Dexec.mainClass="com.wooohooo.luceneQuery.App"
