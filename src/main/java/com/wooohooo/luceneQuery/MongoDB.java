@@ -40,35 +40,23 @@ public class MongoDB
     public List<Set<Map.Entry<String, Object>>> getDocument(MongoDatabase mongoDatabase) {
         //遍历mongo数据库
         MongoCollection<Document> collection = mongoDatabase.getCollection("news");
-        BasicDBObject doc = new BasicDBObject();
-        long start = System.currentTimeMillis();
         //数据量
         int count = (int)collection.countDocuments();
         System.out.println("count: "+count);
-        //每次读取20000条
-        int pageSize = 100000;
-        //页数
-        int pageCount = count/pageSize + 1;
-        int page = 0;
+        //每次读取50000条
+        int limitSize = 30000;
         MongoCursor cursor = null;
-        //while(page < pageSize)
-        //{
-            cursor = collection.find().limit(pageSize).iterator();
-            int num = 0;
-            List<Set<Map.Entry<String, Object>>> entrySetList = new ArrayList<>();
-            while(cursor.hasNext())
-            {
-                if(num % 1000 == 0)
-                    System.out.println(num);
-                num++;
-                Document document = (Document)cursor.next();
-                entrySetList.add(document.entrySet());
-            }
-            if(cursor != null)
-                cursor.close();
-            //page++;
-            //System.out.println(page);
-        //}
+        cursor = collection.find().limit(limitSize).iterator();
+        int num = 0;
+        List<Set<Map.Entry<String, Object>>> entrySetList = new ArrayList<>();
+        while(cursor.hasNext())
+        {
+            if(num % 1000 == 0)
+                System.out.println(num);
+            num++;
+            Document document = (Document)cursor.next();
+            entrySetList.add(document.entrySet());
+        }
         return entrySetList;
     }
 }
