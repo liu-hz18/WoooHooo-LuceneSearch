@@ -1,6 +1,6 @@
 FROM maven:3-jdk-8-slim
 
-ENV HOME=/opt/hello-maven
+ENV HOME=/opt/luceneQuery
 WORKDIR $HOME
 
 COPY settings.xml $HOME
