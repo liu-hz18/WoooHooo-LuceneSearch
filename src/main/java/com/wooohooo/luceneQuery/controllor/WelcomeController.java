@@ -81,10 +81,14 @@ public class WelcomeController
             TopDocs topDocs = searcher.search(query, page * number);
             jsonArray = new JSONArray();
             int index = 0;
+            //需要返回的字段
+            Set<String>tag = new HashSet();
+            tag.add("_id"); tag.add("content"); tag.add("publish_time");
+            tag.add("url"); tag.add("source"); tag.add("imageurl"); tag.add("title");
             for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                 index++;
-                //if(index <= number * (page-1))
-                //    continue;
+                if(index <= number * page)
+                    continue;
                 //拿到文档实例
                 Document document = searcher.doc(scoreDoc.doc);
                 //获取所有文档字段
@@ -92,7 +96,19 @@ public class WelcomeController
                 //处理文档字段建立Json对象
                 JSONObject jsonObject = new JSONObject();
                 for (IndexableField field:fieldList){
-                    jsonObject.put(field.name(), field.stringValue());
+                    //若字段不被需要
+                    if(!tag.contains(field.name()))
+                        continue;
+                    //content内容大于300字的需要减为300字
+                    if(field.name().equals("content"))
+                    {
+                        if(field.stringValue().length() > 300)
+                        {
+                            jsonObject.put(field.name(), field.stringValue().substring(0,300));
+                        }
+                        else jsonObject.put(field.name(), field.stringValue());
+                    }
+                    else jsonObject.put(field.name(), field.stringValue());
                 }
                 jsonArray.add(jsonObject);
             }            
