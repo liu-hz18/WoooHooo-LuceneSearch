@@ -16,19 +16,43 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.TextSearchOptions;
 import com.mongodb.client.model.Projections;
-import org.bson.Document;
+
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.util.IOUtils;
 
-
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.*;
-
+import java.lang.Thread;
 import javax.sound.midi.MidiSystem;
 
 import java.io.*;
@@ -37,14 +61,16 @@ import java.io.*;
  * Hello world!
  *
  */
+@SpringBootApplication(scanBasePackages = {"com.wooohooo.luceneQuery"}, exclude = MongoAutoConfiguration.class)
 public class App 
 {
-    public static Lucene lucene = new Lucene(); 
-    public static void main( String[] args )
-    {
-        
-        //初始化索引数据库
-        lucene.createIndex("./index");
+    public static MongoDB mongoDB = new MongoDB(); 
+
+    static class IndexThread extends Thread{
+        public void run()
+        {
+            //初始化索引数据库
+        createIndex("./index");
         System.out.println("索引创建成功");
         //利用ssh连接远程服务器
         go();
@@ -54,7 +80,15 @@ public class App
         System.out.println("mongoClient connect");
         //将爬虫数据库内数据建立索引
         addIndexDoc("./index", mongoDatabase);
-        System.out.println("索引文档添加成功");
+        //System.out.println("索引文档添加成功");
+        }
+    }
+    public static void main( String[] args )
+    {
+        IndexThread thread = new IndexThread();
+        thread.start();
+        
+        ConfigurableApplicationContext applicationContext = SpringApplication.run(App.class, args);
     }
 
     public static void go()
@@ -82,13 +116,13 @@ public class App
         return mongoClient.getDatabase("StaticNews");
     }
 
-
-    /**
+/**
      * 创建索引
      *
      * @param indexDir 索引存放位置
      */
-    /*
+
+
     public static void createIndex(String indexDir) {
         IndexWriter writer = null;
         try {
@@ -107,7 +141,7 @@ public class App
             IOUtils.close(writer);
         }
     }
-    */
+
     /**
      * 添加索引文档
      *
@@ -116,66 +150,34 @@ public class App
      */
     
     public static void addIndexDoc(String indexDir, MongoDatabase mongoDatabase) {
-        //遍历mongo数据库
-        MongoCollection<Document> collection = mongoDatabase.getCollection("news");
-        BasicDBObject doc = new BasicDBObject();
-        long start = System.currentTimeMillis();
-        //数据量
-        int count = (int)collection.countDocuments();
-        System.out.println("count: "+count);
-        //每次读取20000条
-        int pageSize = 20000;
-        //页数
-        int pageCount = count/pageSize + 1;
-        int page = 0;
-        MongoCursor cursor = null;
-        //while(page < pageSize)
-        //{
-            cursor = collection.find().iterator();
-            int num = 0;
-            while(cursor.hasNext())
+        IndexWriter writer = null;
+        try {
+            //获取目录
+            Directory directory = FSDirectory.open(Paths.get(indexDir));
+            //设置分词器
+            Analyzer analyzer = new SmartChineseAnalyzer();
+            //准备config
+            IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
+            //创建lucene实例
+            writer = new IndexWriter(directory, indexWriterConfig);
+            List<Set<Map.Entry<String, Object>>> entrySetList = mongoDB.getDocument(mongoDatabase);
+            for(int i=0;i<entrySetList.size();i++)
             {
-                System.out.println(num++);
-                Document document = (Document)cursor.next();
-                Set<Map.Entry<String, Object>> entrySet = document.entrySet();
-                lucene.addIndexDoc(indexDir, entrySet);
+                Document document = new Document();
+                for (Map.Entry<String, Object> entry : entrySetList.get(i)) {
+                    document.add(new TextField(entry.getKey(), entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
+                }
+                writer.addDocument(document);
             }
-            if(cursor != null)
-                cursor.close();
-            //page++;
-            //System.out.println(page);
-        //}
-    }
-    
-
-    /**
-     * json内容转document文档
-     *
-     * @param jsonObj json内容
-     * @return
-     */
-    /*
-    public static Document jsonToDoc(JSONObject jsonObj) {
-        Document document = new Document();
-        Set<Map.Entry<String, Object>> entrySet = jsonObj.entrySet();
-        for (Map.Entry<String, Object> entry : entrySet) {
-            document.add(new TextField(entry.getKey(), entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            IOUtils.close(writer);
         }
-        return document;
     }
-    */
 
-    /**
-     * 查询文档
-     * @param indexDir 索引存放位置
-     * @param queryContent 查询单词内容
-     * @parm page 查询页数
-     * @parm number 查询条数
-     * @return
-     */
-    /*
-    public static String query(String indexDir, String queryContent, int page, int number) {
-
+    public List<JSONObject>query(String indexDir, String queryContent, int page, int number)
+    {
         StringBuilder result = new StringBuilder();
         IndexReader reader = null;
         try {
@@ -186,7 +188,7 @@ public class App
             //获取索引实例
             IndexSearcher searcher = new  IndexSearcher(reader);
             //设置分词器
-            Analyzer analyzer = new SmartChineseAnalyzer();
+            Analyzer analyzer = new StandardAnalyzer();
             //创建解析器
             BooleanClause.Occur[] flags = {BooleanClause.Occur.SHOULD,
                     BooleanClause.Occur.SHOULD};
@@ -212,12 +214,12 @@ public class App
                 }
             }
             System.out.println("查询结果："+result);
+            
         } catch (Exception e) {
             e.printStackTrace();
         }finally {
             IOUtils.close(reader);
         }
-        return result.toString();
+        return null;
     }
-    */
 }

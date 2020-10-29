@@ -1,9 +1,13 @@
-package com.wooohooo.luceneQuery;
+package com.wooohooo.luceneQuery.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.util.IOUtils;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -34,69 +38,32 @@ import javax.sound.midi.MidiSystem;
 
 import java.io.*;
 
-public class Lucene
+/**
+ * Hello world!
+ *
+ */
+@RestController
+public class WelcomeController
 {
-    /**
-     * 创建索引
-     *
-     * @param indexDir 索引存放位置
-     */
-
-
-    public void createIndex(String indexDir) {
-        IndexWriter writer = null;
-        try {
-            //获取目录
-            Directory directory = FSDirectory.open(Paths.get(indexDir));
-            //设置分词器
-            Analyzer analyzer = new SmartChineseAnalyzer();
-            //准备config
-            IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
-            //创建lucene实例
-            writer = new IndexWriter(directory, indexWriterConfig);
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            IOUtils.close(writer);
-        }
-    }
-
-    /**
-     * 添加索引文档
-     *
-     * @param indexDir    索引存放位置
-     * @param mongoDatabase 数据库
-     */
-    
-    public void addIndexDoc(String indexDir, Set<Map.Entry<String, Object>> entrySet) {
-        IndexWriter writer = null;
-        try {
-            //获取目录
-            Directory directory = FSDirectory.open(Paths.get(indexDir));
-            //设置分词器
-            Analyzer analyzer = new SmartChineseAnalyzer();
-            //准备config
-            IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
-            //创建lucene实例
-            writer = new IndexWriter(directory, indexWriterConfig);
-            Document document = new Document();
-            for (Map.Entry<String, Object> entry : entrySet) {
-                document.add(new TextField(entry.getKey(), entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
-            }
-            writer.addDocument(document);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            IOUtils.close(writer);
-        }
-    }
-
-    public List<JSONObject>query(String indexDir, String queryContent, int page, int number)
+    @RequestMapping(value = "/", method = RequestMethod.GET)
+    public ResponseEntity<?> welcome()
     {
-        StringBuilder result = new StringBuilder();
+        return new ResponseEntity<>("Welcome to Maven!", HttpStatus.OK);
+    }
+
+    @GetMapping("/queryNews")
+    public JSONArray queryNews(@RequestParam(name = "name")String name,@RequestParam(name = "page")String page,@RequestParam(name="number")String number)
+    {
+        System.out.println("name= " + name);
+        System.out.println("page=" +page);
+        System.out.println("number=" + number);
+        return query("./index", name, Integer.parseInt(page), Integer.parseInt(number));
+    }
+
+    public JSONArray query(String indexDir, String queryContent, int page, int number)
+    {
         IndexReader reader = null;
+        JSONArray jsonArray = null;
         try {
             //获取目录
             Directory directory = FSDirectory.open(Paths.get((indexDir)));
@@ -112,31 +79,28 @@ public class Lucene
             //QueryParser queryParser = new QueryParser(queryParam, analyzer);
             Query query = MultiFieldQueryParser.parse(queryContent,new String[]{"content","title"}, flags, analyzer);
             TopDocs topDocs = searcher.search(query, page * number);
-            System.out.println("topDocs内容:" + JSON.toJSONString(topDocs));
+            jsonArray = new JSONArray();
             int index = 0;
             for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                 index++;
-                if(index <= number * (page-1))
-                    continue;
+                //if(index <= number * (page-1))
+                //    continue;
                 //拿到文档实例
                 Document document = searcher.doc(scoreDoc.doc);
                 //获取所有文档字段
                 List<IndexableField> fieldList = document.getFields();
-                //处理文档字段
+                //处理文档字段建立Json对象
+                JSONObject jsonObject = new JSONObject();
                 for (IndexableField field:fieldList){
-                    result.append(field.name());
-                    result.append(":");
-                    result.append(field.stringValue());
-                    result.append(",\r\n");
+                    jsonObject.put(field.name(), field.stringValue());
                 }
-            }
-            System.out.println("查询结果："+result);
-            
+                jsonArray.add(jsonObject);
+            }            
         } catch (Exception e) {
             e.printStackTrace();
         }finally {
             IOUtils.close(reader);
         }
-        return null;
+        return jsonArray;
     }
 }
