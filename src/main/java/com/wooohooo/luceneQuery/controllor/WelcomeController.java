@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jdk.nashorn.internal.runtime.JSONListAdapter;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer;
@@ -45,6 +47,13 @@ import java.io.*;
 @RestController
 public class WelcomeController
 {
+    //上一次查询的词条
+    private String prevQuery = "";
+    //上次的全部结果
+    private JSONArray prevResult = null;
+    //上次的结果个数
+    private int prevTotalNum = 0;
+
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public ResponseEntity<?> welcome()
     {
@@ -52,18 +61,32 @@ public class WelcomeController
     }
 
     @GetMapping("/queryNews")
-    public JSONArray queryNews(@RequestParam(name = "name")String name,@RequestParam(name = "page")String page,@RequestParam(name="number")String number)
+    public JSONObject queryNews(@RequestParam(name = "name")String name,@RequestParam(name = "page")String page,@RequestParam(name="number")String number)
     {
         System.out.println("name= " + name);
         System.out.println("page=" +page);
         System.out.println("number=" + number);
-        return query("./index", name, Integer.parseInt(page), Integer.parseInt(number));
+        int _page = Integer.parseInt(page);
+        int _number = Integer.parseInt(number);
+        JSONObject result = new JSONObject();
+        JSONArray newslist = new JSONArray();
+        if(!name.equals(prevQuery))
+        {
+            query("./index", name, _page, _number);
+            prevQuery = name;
+        }
+        for(int i=_page * _number; i <(_page + 1) * _number ; i++)
+        {
+            newslist.add(prevResult.get(i));
+        }
+        result.put("data", newslist);
+        result.put("total", prevTotalNum);
+        return result;
     }
 
-    public JSONArray query(String indexDir, String queryContent, int page, int number)
+    public void query(String indexDir, String queryContent, int page, int number)
     {
         IndexReader reader = null;
-        JSONArray jsonArray = null;
         try {
             //获取目录
             Directory directory = FSDirectory.open(Paths.get((indexDir)));
@@ -78,8 +101,8 @@ public class WelcomeController
                     BooleanClause.Occur.SHOULD};
             //QueryParser queryParser = new QueryParser(queryParam, analyzer);
             Query query = MultiFieldQueryParser.parse(queryContent,new String[]{"content","title"}, flags, analyzer);
-            TopDocs topDocs = searcher.search(query, (page+1) * number);
-            jsonArray = new JSONArray();
+            TopDocs topDocs = searcher.search(query, 10000);
+            prevResult.clear();
             int index = 0;
             //需要返回的字段
             Set<String>tag = new HashSet();
@@ -87,8 +110,6 @@ public class WelcomeController
             tag.add("url"); tag.add("source"); tag.add("imageurl"); tag.add("title");
             for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                 index++;
-                if(index <= number * page)
-                    continue;
                 //拿到文档实例
                 Document document = searcher.doc(scoreDoc.doc);
                 //获取所有文档字段
@@ -110,13 +131,13 @@ public class WelcomeController
                     }
                     else jsonObject.put(field.name(), field.stringValue());
                 }
-                jsonArray.add(jsonObject);
-            }            
+                prevResult.add(jsonObject);
+            }
+            prevTotalNum = prevResult.size();
         } catch (Exception e) {
             e.printStackTrace();
         }finally {
             IOUtils.close(reader);
         }
-        return jsonArray;
     }
 }
