@@ -78,9 +78,18 @@ public class App
         //获取爬虫数据库
         MongoDatabase mongoDatabase = connectToMongo();
         System.out.println("mongoClient connect");
-        //将爬虫数据库内数据建立索引
-        addIndexDoc("./index", mongoDatabase);
-        //System.out.println("索引文档添加成功");
+        //统计数据库内数据总量
+        MongoCollection collection = mongoDatabase.getCollection("news");
+        int count = (int)collection.countDocuments();
+        System.out.println("count: "+ count);
+        //将爬虫数据库内数据建立索引 
+        for(int i=0;i<count;i+=20000)
+        {
+            //每次建立一批索引，每批20000个
+            addIndexDoc("./index", mongoDatabase, i);
+        }
+        
+        System.out.println("索引文档添加成功");
         }
     }
     public static void main( String[] args )
@@ -149,7 +158,7 @@ public class App
      * @param mongoDatabase 数据库
      */
     
-    public static void addIndexDoc(String indexDir, MongoDatabase mongoDatabase) {
+    public static void addIndexDoc(String indexDir, MongoDatabase mongoDatabase, int count) {
         IndexWriter writer = null;
         try {
             //获取目录
@@ -160,7 +169,7 @@ public class App
             IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
             //创建lucene实例
             writer = new IndexWriter(directory, indexWriterConfig);
-            List<Set<Map.Entry<String, Object>>> entrySetList = mongoDB.getDocument(mongoDatabase);
+            List<Set<Map.Entry<String, Object>>> entrySetList = mongoDB.getDocument(mongoDatabase, count);
             for(int i=0;i<entrySetList.size();i++)
             {
                 Document document = new Document();
