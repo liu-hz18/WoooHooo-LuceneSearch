@@ -50,7 +50,7 @@ public class WelcomeController
     //上一次查询的词条
     private String prevQuery = "";
     //上次的全部结果
-    private JSONArray prevResult = null;
+    private JSONArray prevResult = new JSONArray();
     //上次的结果个数
     private int prevTotalNum = 0;
 
