@@ -95,7 +95,7 @@ public class WelcomeController
             //获取索引实例
             IndexSearcher searcher = new  IndexSearcher(reader);
             //设置分词器
-            Analyzer analyzer = new StandardAnalyzer();
+            Analyzer analyzer = new SmartChineseAnalyzer();
             //创建解析器
             BooleanClause.Occur[] flags = {BooleanClause.Occur.SHOULD,
                     BooleanClause.Occur.SHOULD};
