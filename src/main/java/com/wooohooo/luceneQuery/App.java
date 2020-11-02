@@ -121,7 +121,7 @@ public class App
 
     public static MongoDatabase connectToMongo()
     {
-        MongoClient mongoClient = new MongoClient("127.0.0.1", 27017);
+        MongoClient mongoClient = new MongoClient("localhost", 27017);
         return mongoClient.getDatabase("StaticNews");
     }
 
