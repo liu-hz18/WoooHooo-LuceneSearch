@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jdk.nashorn.internal.runtime.JSONListAdapter;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer;
@@ -45,6 +47,9 @@ import java.io.*;
 @RestController
 public class WelcomeController
 {
+    //上次的结果个数
+    private int prevTotalNum = 0;
+
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public ResponseEntity<?> welcome()
     {
@@ -52,19 +57,30 @@ public class WelcomeController
     }
 
     @GetMapping("/queryNews")
-    public JSONArray queryNews(@RequestParam(name = "name")String name,@RequestParam(name = "page")String page,@RequestParam(name="number")String number)
+    public JSONObject queryNews(@RequestParam(name = "name")String name,@RequestParam(name = "page")String page,@RequestParam(name="number")String number)
     {
+        long begintime = System.currentTimeMillis();
         System.out.println("name= " + name);
         System.out.println("page=" +page);
         System.out.println("number=" + number);
-        return query("./index", name, Integer.parseInt(page), Integer.parseInt(number));
+        int _page = Integer.parseInt(page);
+        int _number = Integer.parseInt(number);
+        JSONObject result = new JSONObject();
+        JSONArray newslist = null;
+        newslist = query("./index", name, _page, _number);
+        result.put("data", newslist);
+        result.put("total", prevTotalNum);
+        long endtinme=System.currentTimeMillis();
+        System.out.println("time: "+(endtinme - begintime) + "ms");
+        return result;
     }
 
     public JSONArray query(String indexDir, String queryContent, int page, int number)
     {
         IndexReader reader = null;
-        JSONArray jsonArray = null;
+        JSONArray result = new JSONArray();
         try {
+            long queryStart = System.currentTimeMillis();
             //获取目录
             Directory directory = FSDirectory.open(Paths.get((indexDir)));
             //获取reader
@@ -72,23 +88,26 @@ public class WelcomeController
             //获取索引实例
             IndexSearcher searcher = new  IndexSearcher(reader);
             //设置分词器
-            Analyzer analyzer = new StandardAnalyzer();
+            Analyzer analyzer = new SmartChineseAnalyzer();
             //创建解析器
             BooleanClause.Occur[] flags = {BooleanClause.Occur.SHOULD,
                     BooleanClause.Occur.SHOULD};
-            //QueryParser queryParser = new QueryParser(queryParam, analyzer);
+            //单词条搜索
+            //QueryParser queryParser = new QueryParser("title", analyzer);
+            //Query query = queryParser.parse(queryContent);
+            //双词条搜索
             Query query = MultiFieldQueryParser.parse(queryContent,new String[]{"content","title"}, flags, analyzer);
-            TopDocs topDocs = searcher.search(query, page * number);
-            jsonArray = new JSONArray();
+            TopDocs topDocs = searcher.search(query, 10000);
+            System.out.println("queryTime: " + (System.currentTimeMillis()-queryStart) + "ms");
             int index = 0;
             //需要返回的字段
             Set<String>tag = new HashSet();
-            tag.add("_id"); tag.add("content"); tag.add("publish_time");
+            tag.add("_id"); tag.add("content"); tag.add("publish_time"); tag.add("top_img");
             tag.add("url"); tag.add("source"); tag.add("imageurl"); tag.add("title");
             for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                 index++;
-                if(index <= number * page)
-                    continue;
+                if(index < page * number) continue;
+                if(index >= (page + 1) * number) break;
                 //拿到文档实例
                 Document document = searcher.doc(scoreDoc.doc);
                 //获取所有文档字段
@@ -110,13 +129,14 @@ public class WelcomeController
                     }
                     else jsonObject.put(field.name(), field.stringValue());
                 }
-                jsonArray.add(jsonObject);
-            }            
+                result.add(jsonObject);
+            }
+            prevTotalNum = topDocs.totalHits;
         } catch (Exception e) {
             e.printStackTrace();
         }finally {
             IOUtils.close(reader);
         }
-        return jsonArray;
+        return result;
     }
 }

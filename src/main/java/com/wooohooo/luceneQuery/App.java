@@ -78,9 +78,18 @@ public class App
         //获取爬虫数据库
         MongoDatabase mongoDatabase = connectToMongo();
         System.out.println("mongoClient connect");
-        //将爬虫数据库内数据建立索引
-        addIndexDoc("./index", mongoDatabase);
-        //System.out.println("索引文档添加成功");
+        //统计数据库内数据总量
+        MongoCollection collection = mongoDatabase.getCollection("news");
+        int count = (int)collection.countDocuments();
+        System.out.println("count: "+ count);
+        //将爬虫数据库内数据建立索引 
+        for(int i=0;i<count;i+=20000)
+        {
+            //每次建立一批索引，每批20000个
+            addIndexDoc("./index", mongoDatabase, i);
+        }
+        
+        System.out.println("索引文档添加成功");
         }
     }
     public static void main( String[] args )
@@ -149,7 +158,7 @@ public class App
      * @param mongoDatabase 数据库
      */
     
-    public static void addIndexDoc(String indexDir, MongoDatabase mongoDatabase) {
+    public static void addIndexDoc(String indexDir, MongoDatabase mongoDatabase, int count) {
         IndexWriter writer = null;
         try {
             //获取目录
@@ -160,9 +169,15 @@ public class App
             IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
             //创建lucene实例
             writer = new IndexWriter(directory, indexWriterConfig);
+<<<<<<< HEAD
             List<Set<Map.Entry<String, Object>>> entrySetList = mongoDB.getDocument(mongoDatabase);
             int setSize = entrySetList.size();
             for(int i = 0; i < setSize; i++)
+=======
+            List<Set<Map.Entry<String, Object>>> entrySetList = mongoDB.getDocument(mongoDatabase, count);
+            long luceneStartTime = System.currentTimeMillis();
+            for(int i=0;i<entrySetList.size();i++)
+>>>>>>> feat_ssh
             {
                 Document document = new Document();
                 for (Map.Entry<String, Object> entry : entrySetList.get(i)) {
@@ -170,6 +185,8 @@ public class App
                 }
                 writer.addDocument(document);
             }
+            long luceneEndTime = System.currentTimeMillis();
+            System.out.println("lucene func: " + (luceneEndTime-luceneStartTime) + "ms");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
