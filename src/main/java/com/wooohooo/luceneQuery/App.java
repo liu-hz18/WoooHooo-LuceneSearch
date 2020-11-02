@@ -73,7 +73,7 @@ public class App
         createIndex("./index");
         System.out.println("索引创建成功");
         //利用ssh连接远程服务器
-        go();
+        //go();
         System.out.println("Set the ssh successful");
         //获取爬虫数据库
         MongoDatabase mongoDatabase = connectToMongo();
@@ -112,7 +112,7 @@ public class App
 
     public static MongoDatabase connectToMongo()
     {
-        MongoClient mongoClient = new MongoClient("localhost", 27018);
+        MongoClient mongoClient = new MongoClient("49.233.52.61", 27018);
         return mongoClient.getDatabase("StaticNews");
     }
 
@@ -161,7 +161,8 @@ public class App
             //创建lucene实例
             writer = new IndexWriter(directory, indexWriterConfig);
             List<Set<Map.Entry<String, Object>>> entrySetList = mongoDB.getDocument(mongoDatabase);
-            for(int i=0;i<entrySetList.size();i++)
+            int setSize = entrySetList.size();
+            for(int i = 0; i < setSize; i++)
             {
                 Document document = new Document();
                 for (Map.Entry<String, Object> entry : entrySetList.get(i)) {
