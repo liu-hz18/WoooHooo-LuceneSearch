@@ -73,7 +73,7 @@ public class App
         createIndex("./index");
         System.out.println("索引创建成功");
         //利用ssh连接远程服务器
-        go();
+        //go();
         System.out.println("Set the ssh successful");
         //获取爬虫数据库
         MongoDatabase mongoDatabase = connectToMongo();
@@ -83,11 +83,11 @@ public class App
         int count = (int)collection.countDocuments();
         System.out.println("count: "+ count);
         //将爬虫数据库内数据建立索引 
-        for(int i=0;i<count;i+=20000)
-        {
+        //for(int i=0;i<count;i+=20000)
+        //{
             //每次建立一批索引，每批20000个
-            addIndexDoc("./index", mongoDatabase, i);
-        }
+            //addIndexDoc("./index", mongoDatabase, i);
+        //}
         
         System.out.println("索引文档添加成功");
         }
@@ -121,7 +121,7 @@ public class App
 
     public static MongoDatabase connectToMongo()
     {
-        MongoClient mongoClient = new MongoClient("localhost", 27018);
+        MongoClient mongoClient = new MongoClient("127.0.0.1", 27017);
         return mongoClient.getDatabase("StaticNews");
     }
 
@@ -170,6 +170,7 @@ public class App
             //创建lucene实例
             writer = new IndexWriter(directory, indexWriterConfig);
             List<Set<Map.Entry<String, Object>>> entrySetList = mongoDB.getDocument(mongoDatabase, count);
+            long luceneStartTime = System.currentTimeMillis();
             for(int i=0;i<entrySetList.size();i++)
             {
                 Document document = new Document();
@@ -178,6 +179,8 @@ public class App
                 }
                 writer.addDocument(document);
             }
+            long luceneEndTime = System.currentTimeMillis();
+            System.out.println("lucene func: " + (luceneEndTime-luceneStartTime) + "ms");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
