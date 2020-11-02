@@ -73,7 +73,7 @@ public class App
         createIndex("./index");
         System.out.println("索引创建成功");
         //利用ssh连接远程服务器
-        //go();
+        go();
         System.out.println("Set the ssh successful");
         //获取爬虫数据库
         MongoDatabase mongoDatabase = connectToMongo();
@@ -121,7 +121,7 @@ public class App
 
     public static MongoDatabase connectToMongo()
     {
-        MongoClient mongoClient = new MongoClient("localhost", 27017);
+        MongoClient mongoClient = new MongoClient("localhost", 27018);
         return mongoClient.getDatabase("StaticNews");
     }
 
