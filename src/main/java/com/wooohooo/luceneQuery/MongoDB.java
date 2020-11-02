@@ -49,7 +49,10 @@ public class MongoDB
         while(cursor.hasNext())
         {
             if(num % 1000 == 0)
+            {
                 System.out.println(num);
+            }
+                
             num++;
             Document document = (Document)cursor.next();
             entrySetList.add(document.entrySet());
