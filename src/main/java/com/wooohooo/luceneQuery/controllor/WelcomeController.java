@@ -47,10 +47,6 @@ import java.io.*;
 @RestController
 public class WelcomeController
 {
-    //上一次查询的词条
-    private String prevQuery = "";
-    //上次的全部结果
-    private JSONArray prevResult = new JSONArray();
     //上次的结果个数
     private int prevTotalNum = 0;
 
@@ -63,31 +59,28 @@ public class WelcomeController
     @GetMapping("/queryNews")
     public JSONObject queryNews(@RequestParam(name = "name")String name,@RequestParam(name = "page")String page,@RequestParam(name="number")String number)
     {
+        long begintime = System.currentTimeMillis();
         System.out.println("name= " + name);
         System.out.println("page=" +page);
         System.out.println("number=" + number);
         int _page = Integer.parseInt(page);
         int _number = Integer.parseInt(number);
         JSONObject result = new JSONObject();
-        JSONArray newslist = new JSONArray();
-        if(!name.equals(prevQuery))
-        {
-            query("./index", name, _page, _number);
-            prevQuery = name;
-        }
-        for(int i=_page * _number; i <(_page + 1) * _number ; i++)
-        {
-            newslist.add(prevResult.get(i));
-        }
+        JSONArray newslist = null;
+        newslist = query("./index", name, _page, _number);
         result.put("data", newslist);
         result.put("total", prevTotalNum);
+        long endtinme=System.currentTimeMillis();
+        System.out.println("time: "+(endtinme - begintime) + "ms");
         return result;
     }
 
-    public void query(String indexDir, String queryContent, int page, int number)
+    public JSONArray query(String indexDir, String queryContent, int page, int number)
     {
         IndexReader reader = null;
+        JSONArray result = new JSONArray();
         try {
+            long queryStart = System.currentTimeMillis();
             //获取目录
             Directory directory = FSDirectory.open(Paths.get((indexDir)));
             //获取reader
@@ -99,10 +92,13 @@ public class WelcomeController
             //创建解析器
             BooleanClause.Occur[] flags = {BooleanClause.Occur.SHOULD,
                     BooleanClause.Occur.SHOULD};
-            //QueryParser queryParser = new QueryParser(queryParam, analyzer);
+            //单词条搜索
+            //QueryParser queryParser = new QueryParser("title", analyzer);
+            //Query query = queryParser.parse(queryContent);
+            //双词条搜索
             Query query = MultiFieldQueryParser.parse(queryContent,new String[]{"content","title"}, flags, analyzer);
             TopDocs topDocs = searcher.search(query, 10000);
-            prevResult.clear();
+            System.out.println("queryTime: " + (System.currentTimeMillis()-queryStart) + "ms");
             int index = 0;
             //需要返回的字段
             Set<String>tag = new HashSet();
@@ -110,6 +106,8 @@ public class WelcomeController
             tag.add("url"); tag.add("source"); tag.add("imageurl"); tag.add("title");
             for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                 index++;
+                if(index < page * number) continue;
+                if(index >= (page + 1) * number) break;
                 //拿到文档实例
                 Document document = searcher.doc(scoreDoc.doc);
                 //获取所有文档字段
@@ -131,13 +129,14 @@ public class WelcomeController
                     }
                     else jsonObject.put(field.name(), field.stringValue());
                 }
-                prevResult.add(jsonObject);
+                result.add(jsonObject);
             }
-            prevTotalNum = prevResult.size();
+            prevTotalNum = topDocs.totalHits;
         } catch (Exception e) {
             e.printStackTrace();
         }finally {
             IOUtils.close(reader);
         }
+        return result;
     }
 }
