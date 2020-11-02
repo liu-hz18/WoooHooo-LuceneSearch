@@ -121,7 +121,7 @@ public class App
 
     public static MongoDatabase connectToMongo()
     {
-        MongoClient mongoClient = new MongoClient("49.233.52.61", 27018);
+        MongoClient mongoClient = new MongoClient("local", 27018);
         return mongoClient.getDatabase("StaticNews");
     }
 
@@ -169,15 +169,9 @@ public class App
             IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
             //创建lucene实例
             writer = new IndexWriter(directory, indexWriterConfig);
-<<<<<<< HEAD
-            List<Set<Map.Entry<String, Object>>> entrySetList = mongoDB.getDocument(mongoDatabase);
-            int setSize = entrySetList.size();
-            for(int i = 0; i < setSize; i++)
-=======
             List<Set<Map.Entry<String, Object>>> entrySetList = mongoDB.getDocument(mongoDatabase, count);
             long luceneStartTime = System.currentTimeMillis();
             for(int i=0;i<entrySetList.size();i++)
->>>>>>> feat_ssh
             {
                 Document document = new Document();
                 for (Map.Entry<String, Object> entry : entrySetList.get(i)) {
