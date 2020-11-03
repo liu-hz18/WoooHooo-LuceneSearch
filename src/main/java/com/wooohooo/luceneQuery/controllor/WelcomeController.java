@@ -82,7 +82,7 @@ public class WelcomeController
             IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
             //创建lucene实例
             IndexWriter writer = new IndexWriter(directory, indexWriterConfig);
-            //writer.forceMerge(1);
+            writer.forceMerge(1);
             //获取索引实例
             searcher = new  IndexSearcher(reader);
             test = 1;
@@ -92,11 +92,13 @@ public class WelcomeController
                 e.printStackTrace();
             }
         }
+        boolean sort_by_time = false;
+        if(!ralagion.equals("1")) sort_by_time = true;
         int _page = Integer.parseInt(page);
         int _number = Integer.parseInt(number);
         JSONObject result = new JSONObject();
         JSONArray newslist = null;
-        newslist = query("./index", name, _page, _number);
+        newslist = query("./index", name, _page, _number, sort_by_time);
         result.put("data", newslist);
         result.put("total", prevTotalNum);
         long endtinme=System.currentTimeMillis();
@@ -104,7 +106,7 @@ public class WelcomeController
         return result;
     }
 
-    public JSONArray query(String indexDir, String queryContent, int page, int number)
+    public JSONArray query(String indexDir, String queryContent, int page, int number, boolean sort_by_time)
     {
         IndexReader reader = null;
         JSONArray result = new JSONArray();
