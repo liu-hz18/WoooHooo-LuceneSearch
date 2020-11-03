@@ -80,7 +80,7 @@ public class WelcomeController
             IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
             //创建lucene实例
             IndexWriter writer = new IndexWriter(directory, indexWriterConfig);
-            //writer.forceMerge(1);
+            writer.forceMerge(1);
             //获取索引实例
             searcher = new  IndexSearcher(reader);
             test = 1;
