@@ -51,6 +51,8 @@ public class WelcomeController
     private int prevTotalNum = 0;
     private int test = -1;
     IndexSearcher searcher = null;
+    //需要返回的字段
+    String []tag = {"_id","content","publish_time","top_img","url","source","imageurl","title"};
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public ResponseEntity<?> welcome()
     {
@@ -67,6 +69,7 @@ public class WelcomeController
         if(test == -1)
         {
             try{
+                
                 //获取目录
             Directory directory = FSDirectory.open(Paths.get(("./index")));
             //获取reader
@@ -77,7 +80,7 @@ public class WelcomeController
             IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
             //创建lucene实例
             IndexWriter writer = new IndexWriter(directory, indexWriterConfig);
-            writer.forceMerge(1);
+            //writer.forceMerge(1);
             //获取索引实例
             searcher = new  IndexSearcher(reader);
             test = 1;
@@ -118,38 +121,24 @@ public class WelcomeController
             Query query = MultiFieldQueryParser.parse(queryContent,new String[]{"content","title"}, flags, analyzer);
             TopDocs topDocs = searcher.search(query, (page + 1) * number);
             System.out.println("queryTime: " + (System.currentTimeMillis()-queryStart) + "ms");
-            int index = 0;
-            //需要返回的字段
-            Set<String>tag = new HashSet();
-            tag.add("_id"); tag.add("content"); tag.add("publish_time"); tag.add("top_img");
-            tag.add("url"); tag.add("source"); tag.add("imageurl"); tag.add("title");
-            for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
-                index++;
-                if(index < page * number) continue;
-                if(index >= (page + 1) * number) break;
+            long jsonStart = System.currentTimeMillis();
+            //for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
+            for(int i = page * number; i < page * number +number ;i++){
                 //拿到文档实例
-                Document document = searcher.doc(scoreDoc.doc);
+                Document document = searcher.doc(topDocs.scoreDocs[i].doc);
                 //获取所有文档字段
-                List<IndexableField> fieldList = document.getFields();
+                // List<IndexableField> fieldList = document.getFields();
                 //处理文档字段建立Json对象
                 JSONObject jsonObject = new JSONObject();
-                for (IndexableField field:fieldList){
-                    //若字段不被需要
-                    if(!tag.contains(field.name()))
-                        continue;
-                    //content内容大于300字的需要减为300字
-                    if(field.name().equals("content"))
-                    {
-                        if(field.stringValue().length() > 300)
-                        {
-                            jsonObject.put(field.name(), field.stringValue().substring(0,300));
-                        }
-                        else jsonObject.put(field.name(), field.stringValue());
-                    }
-                    else jsonObject.put(field.name(), field.stringValue());
+                for(int j=0;j<8;j++)
+                {
+                    //System.out.println(tag[j]);
+                    IndexableField field = document.getField(tag[j]);
+                    jsonObject.put(field.name(), field.stringValue());
                 }
                 result.add(jsonObject);
             }
+            System.out.println("jsonTime: " + (System.currentTimeMillis() - jsonStart) + "ms");
             prevTotalNum = topDocs.totalHits;
         } catch (Exception e) {
             e.printStackTrace();
