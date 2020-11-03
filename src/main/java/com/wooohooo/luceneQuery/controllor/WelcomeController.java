@@ -60,12 +60,14 @@ public class WelcomeController
     }
 
     @GetMapping("/queryNews")
-    public JSONObject queryNews(@RequestParam(name = "name")String name,@RequestParam(name = "page")String page,@RequestParam(name="number")String number)
+    public JSONObject queryNews(@RequestParam(name = "name")String name,@RequestParam(name = "page")String page,
+                        @RequestParam(name="number")String number, @RequestParam(name="relation")String relation)
     {
         long begintime = System.currentTimeMillis();
         System.out.println("name= " + name);
         System.out.println("page=" +page);
         System.out.println("number=" + number);
+        System.out.println("relation="+ relation);
         if(test == -1)
         {
             try{
