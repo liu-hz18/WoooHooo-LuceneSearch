@@ -49,7 +49,8 @@ public class WelcomeController
 {
     //上次的结果个数
     private int prevTotalNum = 0;
-
+    private int test = -1;
+    IndexSearcher searcher = null;
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public ResponseEntity<?> welcome()
     {
@@ -63,6 +64,29 @@ public class WelcomeController
         System.out.println("name= " + name);
         System.out.println("page=" +page);
         System.out.println("number=" + number);
+        if(test == -1)
+        {
+            try{
+                //获取目录
+            Directory directory = FSDirectory.open(Paths.get(("./index")));
+            //获取reader
+            IndexReader reader = DirectoryReader.open(directory);
+            //设置分词器
+            Analyzer analyzer = new SmartChineseAnalyzer();
+            //准备config
+            IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
+            //创建lucene实例
+            IndexWriter writer = new IndexWriter(directory, indexWriterConfig);
+            writer.forceMerge(1);
+            //获取索引实例
+            searcher = new  IndexSearcher(reader);
+            test = 1;
+            }
+            catch(Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
         int _page = Integer.parseInt(page);
         int _number = Integer.parseInt(number);
         JSONObject result = new JSONObject();
@@ -81,12 +105,7 @@ public class WelcomeController
         JSONArray result = new JSONArray();
         try {
             long queryStart = System.currentTimeMillis();
-            //获取目录
-            Directory directory = FSDirectory.open(Paths.get((indexDir)));
-            //获取reader
-            reader = DirectoryReader.open(directory);
-            //获取索引实例
-            IndexSearcher searcher = new  IndexSearcher(reader);
+            
             //设置分词器
             Analyzer analyzer = new SmartChineseAnalyzer();
             //创建解析器
@@ -97,7 +116,7 @@ public class WelcomeController
             //Query query = queryParser.parse(queryContent);
             //双词条搜索
             Query query = MultiFieldQueryParser.parse(queryContent,new String[]{"content","title"}, flags, analyzer);
-            TopDocs topDocs = searcher.search(query, 10000);
+            TopDocs topDocs = searcher.search(query, (page + 1) * number);
             System.out.println("queryTime: " + (System.currentTimeMillis()-queryStart) + "ms");
             int index = 0;
             //需要返回的字段
@@ -134,8 +153,6 @@ public class WelcomeController
             prevTotalNum = topDocs.totalHits;
         } catch (Exception e) {
             e.printStackTrace();
-        }finally {
-            IOUtils.close(reader);
         }
         return result;
     }

@@ -86,7 +86,7 @@ public class App
         for(int i=0;i<count;i+=20000)
         {
             //每次建立一批索引，每批20000个
-            addIndexDoc("./index", mongoDatabase, i);
+            //addIndexDoc("./index", mongoDatabase, i);
         }
         
         System.out.println("索引文档添加成功");
