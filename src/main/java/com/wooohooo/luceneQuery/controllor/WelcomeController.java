@@ -29,6 +29,8 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -37,6 +39,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 import javax.sound.midi.MidiSystem;
+import javax.swing.event.TreeWillExpandListener;
 
 import java.io.*;
 
@@ -60,12 +63,14 @@ public class WelcomeController
     }
 
     @GetMapping("/queryNews")
-    public JSONObject queryNews(@RequestParam(name = "name")String name,@RequestParam(name = "page")String page,@RequestParam(name="number")String number)
+    public JSONObject queryNews(@RequestParam(name = "name")String name,@RequestParam(name = "page")String page,
+                        @RequestParam(name="number")String number, @RequestParam(name="relation")String relation)
     {
         long begintime = System.currentTimeMillis();
         System.out.println("name= " + name);
         System.out.println("page=" +page);
         System.out.println("number=" + number);
+        System.out.println("relation="+ relation);
         if(test == -1)
         {
             try{
@@ -90,11 +95,13 @@ public class WelcomeController
                 e.printStackTrace();
             }
         }
+        boolean sort_by_time = false;
+        if(!relation.equals("1")) sort_by_time = true;
         int _page = Integer.parseInt(page);
         int _number = Integer.parseInt(number);
         JSONObject result = new JSONObject();
         JSONArray newslist = null;
-        newslist = query("./index", name, _page, _number);
+        newslist = query("./index", name, _page, _number, sort_by_time);
         result.put("data", newslist);
         result.put("total", prevTotalNum);
         long endtinme=System.currentTimeMillis();
@@ -102,7 +109,7 @@ public class WelcomeController
         return result;
     }
 
-    public JSONArray query(String indexDir, String queryContent, int page, int number)
+    public JSONArray query(String indexDir, String queryContent, int page, int number, boolean sort_by_time)
     {
         IndexReader reader = null;
         JSONArray result = new JSONArray();
@@ -119,7 +126,16 @@ public class WelcomeController
             //Query query = queryParser.parse(queryContent);
             //双词条搜索
             Query query = MultiFieldQueryParser.parse(queryContent,new String[]{"content","title"}, flags, analyzer);
-            TopDocs topDocs = searcher.search(query, (page + 1) * number);
+            TopDocs topDocs = null;
+            if(sort_by_time)
+            {
+                topDocs = searcher.search(query, (page+1)*number, 
+                new Sort(new SortField("publish_time", SortField.Type.STRING, true)));
+            }
+            else
+            {
+                topDocs = searcher.search(query, (page + 1) * number);
+            }
             System.out.println("queryTime: " + (System.currentTimeMillis()-queryStart) + "ms");
             long jsonStart = System.currentTimeMillis();
             //for (ScoreDoc scoreDoc : topDocs.scoreDocs) {

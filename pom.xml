@@ -62,13 +62,18 @@
     </dependency>
     <dependency>
       <groupId>org.mongodb</groupId>
-      <artifactId>mongodb-driver-sync</artifactId>
-      <version>4.1.1</version>
+      <artifactId>mongo-java-driver</artifactId>
+      <version>3.9.1</version>
   </dependency>
   <dependency>
     <groupId>org.mongodb</groupId>
-    <artifactId>mongodb-driver-legacy</artifactId>
-    <version>4.1.1</version>
+    <artifactId>mongodb-driver</artifactId>
+    <version>3.4.1</version>
+</dependency>
+<dependency>
+    <groupId>org.mongodb</groupId>
+    <artifactId>bson</artifactId>
+    <version>3.4.1</version>
 </dependency>
 <!-- 
 <dependency>
@@ -91,6 +96,17 @@
   <build>
     <finalName>luceneQuery</finalName>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.5</version>
+        </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.5</version>
+      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
@@ -147,6 +163,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>

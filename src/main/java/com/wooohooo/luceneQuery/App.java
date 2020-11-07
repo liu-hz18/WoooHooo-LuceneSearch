@@ -23,6 +23,8 @@ import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -37,6 +39,7 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -72,9 +75,6 @@ public class App
             //初始化索引数据库
         createIndex("./index");
         System.out.println("索引创建成功");
-        //利用ssh连接远程服务器
-        go();
-        System.out.println("Set the ssh successful");
         //获取爬虫数据库
         MongoDatabase mongoDatabase = connectToMongo();
         System.out.println("mongoClient connect");
@@ -82,6 +82,7 @@ public class App
         MongoCollection collection = mongoDatabase.getCollection("news");
         int count = (int)collection.countDocuments();
         System.out.println("count: "+ count);
+        //测试 只爬100000条
         //将爬虫数据库内数据建立索引 
         for(int i=0;i<count;i+=20000)
         {
@@ -97,7 +98,7 @@ public class App
         IndexThread thread = new IndexThread();
         thread.start();
         
-        ConfigurableApplicationContext applicationContext = SpringApplication.run(App.class, args);
+        //ConfigurableApplicationContext applicationContext = SpringApplication.run(App.class, args);
     }
 
     public static void go()
@@ -121,7 +122,7 @@ public class App
 
     public static MongoDatabase connectToMongo()
     {
-        MongoClient mongoClient = new MongoClient("localhost", 27018);
+        MongoClient mongoClient = new MongoClient("localhost", 30001);
         return mongoClient.getDatabase("StaticNews");
     }
 
@@ -175,7 +176,13 @@ public class App
             {
                 Document document = new Document();
                 for (Map.Entry<String, Object> entry : entrySetList.get(i)) {
-                    document.add(new TextField(entry.getKey(), entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
+                    if(entry.getKey().equals("publish_time"))
+                    {
+                        document.add(new StringField("publish_time", entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
+                        document.add(new SortedDocValuesField("publish_time", new BytesRef((entry.getValue()==null?"":entry.getValue()).toString().getBytes()))); 
+                    }
+                    else
+                        document.add(new TextField(entry.getKey(), entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
                 }
                 writer.addDocument(document);
             }
@@ -186,52 +193,5 @@ public class App
         } finally {
             IOUtils.close(writer);
         }
-    }
-
-    public List<JSONObject>query(String indexDir, String queryContent, int page, int number)
-    {
-        StringBuilder result = new StringBuilder();
-        IndexReader reader = null;
-        try {
-            //获取目录
-            Directory directory = FSDirectory.open(Paths.get((indexDir)));
-            //获取reader
-            reader = DirectoryReader.open(directory);
-            //获取索引实例
-            IndexSearcher searcher = new  IndexSearcher(reader);
-            //设置分词器
-            Analyzer analyzer = new StandardAnalyzer();
-            //创建解析器
-            BooleanClause.Occur[] flags = {BooleanClause.Occur.SHOULD,
-                    BooleanClause.Occur.SHOULD};
-            //QueryParser queryParser = new QueryParser(queryParam, analyzer);
-            Query query = MultiFieldQueryParser.parse(queryContent,new String[]{"content","title"}, flags, analyzer);
-            TopDocs topDocs = searcher.search(query, page * number);
-            System.out.println("topDocs内容:" + JSON.toJSONString(topDocs));
-            int index = 0;
-            for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
-                index++;
-                if(index <= number * (page-1))
-                    continue;
-                //拿到文档实例
-                Document document = searcher.doc(scoreDoc.doc);
-                //获取所有文档字段
-                List<IndexableField> fieldList = document.getFields();
-                //处理文档字段
-                for (IndexableField field:fieldList){
-                    result.append(field.name());
-                    result.append(":");
-                    result.append(field.stringValue());
-                    result.append(",\r\n");
-                }
-            }
-            System.out.println("查询结果："+result);
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }finally {
-            IOUtils.close(reader);
-        }
-        return null;
     }
 }
