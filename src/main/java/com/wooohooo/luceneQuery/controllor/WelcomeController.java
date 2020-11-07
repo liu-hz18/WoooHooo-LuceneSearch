@@ -121,9 +121,6 @@ public class WelcomeController
             //创建解析器
             BooleanClause.Occur[] flags = {BooleanClause.Occur.SHOULD,
                     BooleanClause.Occur.SHOULD};
-            //单词条搜索
-            //QueryParser queryParser = new QueryParser("title", analyzer);
-            //Query query = queryParser.parse(queryContent);
             //双词条搜索
             Query query = MultiFieldQueryParser.parse(queryContent,new String[]{"content","title"}, flags, analyzer);
             TopDocs topDocs = null;
@@ -148,9 +145,20 @@ public class WelcomeController
                 JSONObject jsonObject = new JSONObject();
                 for(int j=0;j<8;j++)
                 {
-                    //System.out.println(tag[j]);
                     IndexableField field = document.getField(tag[j]);
-                    jsonObject.put(field.name(), field.stringValue());
+                    if(j == 1)
+                    {
+                        String content = field.stringValue();
+                        if(field.stringValue().length() > 300)
+                        {
+                            content = content.substring(0,300);
+                        }
+                        jsonObject.put(field.name(), content);
+                    }
+                    else
+                    {
+                        jsonObject.put(field.name(), field.stringValue());
+                    }
                 }
                 result.add(jsonObject);
             }
