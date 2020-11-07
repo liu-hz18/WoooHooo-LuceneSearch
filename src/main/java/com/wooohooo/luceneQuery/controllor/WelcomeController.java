@@ -29,6 +29,8 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -37,6 +39,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 import javax.sound.midi.MidiSystem;
+import javax.swing.event.TreeWillExpandListener;
 
 import java.io.*;
 
@@ -93,7 +96,7 @@ public class WelcomeController
             }
         }
         boolean sort_by_time = false;
-        if(!ralagion.equals("1")) sort_by_time = true;
+        if(!relation.equals("1")) sort_by_time = true;
         int _page = Integer.parseInt(page);
         int _number = Integer.parseInt(number);
         JSONObject result = new JSONObject();
@@ -123,7 +126,16 @@ public class WelcomeController
             //Query query = queryParser.parse(queryContent);
             //双词条搜索
             Query query = MultiFieldQueryParser.parse(queryContent,new String[]{"content","title"}, flags, analyzer);
-            TopDocs topDocs = searcher.search(query, (page + 1) * number);
+            TopDocs topDocs = null;
+            if(sort_by_time)
+            {
+                topDocs = searcher.search(query, (page+1)*number, 
+                new Sort(new SortField("publish_time", SortField.Type.STRING, true)));
+            }
+            else
+            {
+                topDocs = searcher.search(query, (page + 1) * number);
+            }
             System.out.println("queryTime: " + (System.currentTimeMillis()-queryStart) + "ms");
             long jsonStart = System.currentTimeMillis();
             //for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
