@@ -89,7 +89,7 @@ public class App
             //每次建立一批索引，每批20000个
             //addIndexDoc("./index", mongoDatabase, i);
         }
-        
+        optimazeIndex("./index");
         System.out.println("索引文档添加成功");
         }
     }
@@ -191,6 +191,22 @@ public class App
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
+            IOUtils.close(writer);
+        }
+    }
+
+    public static void optimazeIndex(String indexDir)
+    {
+        IndexWriter writer = null;
+        try {
+            Directory directory = FSDirectory.open(Paths.get(indexDir));
+            Analyzer analyzer = new SmartChineseAnalyzer();
+            IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
+            writer = new IndexWriter(directory, indexWriterConfig);
+            writer.forceMerge(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally{
             IOUtils.close(writer);
         }
     }
