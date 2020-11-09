@@ -60,12 +60,14 @@ import javax.sound.midi.MidiSystem;
 
 import java.io.*;
 
+
 @SpringBootApplication(scanBasePackages = {"com.wooohooo.luceneQuery"}, exclude = MongoAutoConfiguration.class)
 public class App 
 {
-    public static MongoDB mongoDB = new MongoDB(); 
-    public static int incrementalNewsNum = 0;
-    public static long timeInterval = 3600 * 1000;
+    private static MongoDB mongoDB = new MongoDB(); 
+    private static int incrementalNewsNum = 0;
+    private static long timeInterval = 3600 * 1000;
+
     static class StaticIndexThread extends Thread{
         public void run()
         {
@@ -90,19 +92,24 @@ public class App
         System.out.println("索引文档添加成功");
         }
     }
-
-    static class IncrementalIndexThread extends Thread{
+    
+    static class IncrementalIndexThread extends Thread
+    {
+        //增量索引
         public void run()
         {
-
+            MongoDatabase mongoDatabase = connectToMongo();
         }
     }
     public static void main( String[] args )
     {
-        IndexThread thread = new IndexThread();
-        thread.start();
+        StaticIndexThread staitcThread = new StaticIndexThread();
+        staticThread.start();
         
         ConfigurableApplicationContext applicationContext = SpringApplication.run(App.class, args);
+    
+        IncrementalIndexThread incrementalThread = new IncrementalIndexThread();
+        incrementalThread.start(); 
     }
 
     public static MongoDatabase connectToMongo()
