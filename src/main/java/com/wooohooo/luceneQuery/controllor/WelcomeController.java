@@ -79,13 +79,6 @@ public class WelcomeController
             Directory directory = FSDirectory.open(Paths.get(("./index")));
             //获取reader
             IndexReader reader = DirectoryReader.open(directory);
-            //设置分词器
-            Analyzer analyzer = new SmartChineseAnalyzer();
-            //准备config
-            IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
-            //创建lucene实例
-            IndexWriter writer = new IndexWriter(directory, indexWriterConfig);
-            writer.forceMerge(1);
             //获取索引实例
             searcher = new  IndexSearcher(reader);
             test = 1;
