@@ -87,7 +87,7 @@ public class App
         for(int i=0;i<count;i+=20000)
         {
             //每次建立一批索引，每批20000个
-            //addIndexDoc("./index", mongoDatabase, i);
+            addIndexDoc("./index", mongoDatabase, i);
         }
         optimazeIndex("./index");
         System.out.println("索引文档添加成功");
@@ -101,29 +101,10 @@ public class App
         //ConfigurableApplicationContext applicationContext = SpringApplication.run(App.class, args);
     }
 
-    public static void go()
-    {
-        try{
-            JSch jsch = new JSch();
-            Session session = jsch.getSession("ubuntu", "49.233.52.61", 22);
-            session.setPassword("48*~VbNY93Aq");
-            session.setConfig("StrictHostKeyChecking", "no");
-            session.connect();
-            System.out.println(session.getServerVersion());//这里打印SSH服务器版本信息
- 
-            //ssh -L 192.168.0.102:5555:192.168.0.101:3306 yunshouhu@192.168.0.102  正向代理
-           int assinged_port = session.setPortForwardingL("localhost", 27018, "127.0.0.1", 27017);//端口映射 转发
- 
-           System.out.println("localhost:" + assinged_port);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public static MongoDatabase connectToMongo()
     {
         MongoClient mongoClient = new MongoClient("localhost", 30001);
-        return mongoClient.getDatabase("StaticNews");
+        return mongoClient.getDatabase("NewsCopy");
     }
 
 /**
