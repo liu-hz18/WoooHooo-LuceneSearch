@@ -60,10 +60,6 @@ import javax.sound.midi.MidiSystem;
 
 import java.io.*;
 
-/**
- * Hello world!
- *
- */
 @SpringBootApplication(scanBasePackages = {"com.wooohooo.luceneQuery"}, exclude = MongoAutoConfiguration.class)
 public class App 
 {
@@ -87,7 +83,7 @@ public class App
         for(int i=0;i<count;i+=20000)
         {
             //每次建立一批索引，每批20000个
-            addIndexDoc("./index", mongoDatabase, i);
+            //addIndexDoc("./index", mongoDatabase, i);
         }
         optimazeIndex("./index");
         System.out.println("索引文档添加成功");
@@ -98,7 +94,7 @@ public class App
         IndexThread thread = new IndexThread();
         thread.start();
         
-        //ConfigurableApplicationContext applicationContext = SpringApplication.run(App.class, args);
+        ConfigurableApplicationContext applicationContext = SpringApplication.run(App.class, args);
     }
 
     public static MongoDatabase connectToMongo()
