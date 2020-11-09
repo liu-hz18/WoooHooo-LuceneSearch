@@ -64,8 +64,9 @@ import java.io.*;
 public class App 
 {
     public static MongoDB mongoDB = new MongoDB(); 
-
-    static class IndexThread extends Thread{
+    public static int incrementalNewsNum = 0;
+    public static long timeInterval = 3600 * 1000;
+    static class StaticIndexThread extends Thread{
         public void run()
         {
             //初始化索引数据库
@@ -87,6 +88,13 @@ public class App
         }
         optimazeIndex("./index");
         System.out.println("索引文档添加成功");
+        }
+    }
+
+    static class IncrementalIndexThread extends Thread{
+        public void run()
+        {
+
         }
     }
     public static void main( String[] args )
