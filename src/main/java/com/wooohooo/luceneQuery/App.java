@@ -100,22 +100,25 @@ public class App
         {
             while(true)
             {
-                try{
+                try
+                {
                     MongoClient mongoClient = new MongoClient("localhost", 30001);
-                MongoDatabase mongoDatabase = mongoClient.getDatabase("DynamicNews");
-                MongoCollection collection = mongoDatabase.getCollection("news");
-                int incrementalCount = (int)collection.countDocuments();
-                System.out.println("incrementalCount: " + incrementalCount);
-                for(int i=incrementalNewsNum; i<incrementalCount; i+=20000)
-                {
-                    addIndexDoc("./index", mongoDatabase, 20000);
-                }
-                incrementalNewsNum = incrementalCount;
-                if(incrementalNewsNum % 100000 == 0)
-                {
-                    optimazeIndex("./index");
-                }
-                this.sleep(timeInterval);
+                    MongoDatabase mongoDatabase = mongoClient.getDatabase("DynamicNews");
+                    MongoCollection collection = mongoDatabase.getCollection("news");
+                    int incrementalCount = (int)collection.countDocuments();
+                    System.out.println("incrementalCount: " + incrementalCount);
+                    int existNum = incrementalNewsNum / 100000;
+                    for(int i=incrementalNewsNum; i<incrementalCount; i+=20000)
+                    {
+                        addIndexDoc("./index", mongoDatabase, 20000);
+                    }
+                    incrementalNewsNum = incrementalCount;
+                    int newNum = incrementalNewsNum / 100000;
+                    if(newNum > existNum)
+                    {
+                        optimazeIndex("./index");
+                    }
+                    this.sleep(timeInterval);
                 }
                 catch(Exception e)
                 {
