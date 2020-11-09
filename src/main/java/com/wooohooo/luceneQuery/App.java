@@ -103,7 +103,7 @@ public class App
     }
     public static void main( String[] args )
     {
-        StaticIndexThread staitcThread = new StaticIndexThread();
+        StaticIndexThread staticThread = new StaticIndexThread();
         staticThread.start();
         
         ConfigurableApplicationContext applicationContext = SpringApplication.run(App.class, args);
