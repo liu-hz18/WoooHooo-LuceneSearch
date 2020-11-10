@@ -17,6 +17,8 @@ import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -24,6 +26,7 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -33,6 +36,7 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -54,6 +58,7 @@ public class WelcomeController
     private int prevTotalNum = 0;
     private int test = -1;
     IndexSearcher searcher = null;
+    private int dynamicNewsNum = 0;
     //需要返回的字段
     String []tag = {"_id","content","publish_time","top_img","url","source","imageurl","title"};
     @RequestMapping(value = "/", method = RequestMethod.GET)
@@ -100,6 +105,94 @@ public class WelcomeController
         long endtinme=System.currentTimeMillis();
         System.out.println("time: "+(endtinme - begintime) + "ms");
         return result;
+    }
+
+    //获取动态新闻
+    @PostMapping("/")
+    public String getNews(@RequestParam(name = "news")JSONObject newsObject)
+    {
+        JSONArray newsList = newsObject.getJSONArray("news");
+        addIndex("./index", newsList);
+        return "receive";
+    }
+    //建立动态索引
+    public void addIndex(String indexDir, JSONArray newsList)
+    {
+        IndexWriter writer = null;
+        try{
+            int existNum = dynamicNewsNum / 100000;
+            //获取目录
+            Directory directory = FSDirectory.open(Paths.get(indexDir));
+            //设置分词器
+            Analyzer analyzer = new SmartChineseAnalyzer();
+            //索引设置
+            IndexWriterConfig config = new IndexWriterConfig(analyzer);
+            //获取索引
+            writer = new IndexWriter(directory, config);
+
+            //解析jsonArray并建立索引
+            for(int i=0;i<newsList.size();i++)
+            {
+                Document document = new Document();
+                JSONObject newsObject = newsList.getJSONObject(i);
+                document = jsonToDoc(newsObject);
+            }
+            dynamicNewsNum += newsList.size();
+            //每100000条索引创建后合并优化索引
+            if(dynamicNewsNum / 100000 > existNum)
+                optimazeIndex("./index");
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+        finally{
+            IOUtils.close(writer);
+        }
+    }
+    //从json文件转到document
+    public Document jsonToDoc(JSONObject newsObject)
+    {
+        Document document = new Document();
+        Set<Map.Entry<String, Object>> entrySet = newsObject.entrySet();
+        for (Map.Entry<String, Object> entry : entrySet) {
+            if(entry.getKey().equals("publish_time"))
+            {
+                document.add(new StringField("publish_time", entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
+                document.add(new SortedDocValuesField("publish_time", new BytesRef((entry.getValue()==null?"":entry.getValue()).toString().getBytes()))); 
+            }
+            else
+            {
+                document.add(new TextField(entry.getKey(), entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
+            }
+        }
+        return document;
+    }
+    //优化索引
+    public void optimazeIndex(String indexDir)
+    {
+        IndexWriter writer = null;
+        try
+        {
+            //获取目录
+            Directory directory = FSDirectory.open(Paths.get(indexDir));
+            //设置分词器
+            Analyzer analyzer = new SmartChineseAnalyzer();
+            //索引设置
+            IndexWriterConfig config = new IndexWriterConfig(analyzer);
+            //获取索引
+            writer = new IndexWriter(directory, config);
+            //合并索引
+            writer.forceMerge(1);
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            IOUtils.close(writer);
+        }
+        
     }
 
     public JSONArray query(String indexDir, String queryContent, int page, int number, boolean sort_by_time)

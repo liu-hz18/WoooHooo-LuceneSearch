@@ -102,15 +102,14 @@ public class App
             {
                 try
                 {
-                    MongoClient mongoClient = new MongoClient("localhost", 30001);
-                    MongoDatabase mongoDatabase = mongoClient.getDatabase("DynamicNews");
-                    MongoCollection collection = mongoDatabase.getCollection("news");
+                    MongoDatabase mongoDatabase = connectToMongo();
+                    MongoCollection collection = mongoDatabase.getCollection("dynamicNews");
                     int incrementalCount = (int)collection.countDocuments();
                     System.out.println("incrementalCount: " + incrementalCount);
                     int existNum = incrementalNewsNum / 100000;
                     for(int i=incrementalNewsNum; i<incrementalCount; i+=20000)
                     {
-                        addIndexDoc("./index", mongoDatabase, 20000);
+                        addIndexDoc("./index", mongoDatabase, i);
                     }
                     incrementalNewsNum = incrementalCount;
                     int newNum = incrementalNewsNum / 100000;
