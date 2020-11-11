@@ -60,7 +60,9 @@ public class MongoDB
         if(cursor != null)
         {
             cursor.close();
+            cursor = null;
         }
+        collection = null;
         return entrySetList;
     }
 }

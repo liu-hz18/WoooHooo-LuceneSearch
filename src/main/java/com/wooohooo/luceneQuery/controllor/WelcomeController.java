@@ -217,15 +217,14 @@ public class WelcomeController
             Query termQuery = MultiFieldQueryParser.parse(queryContent,new String[]{"content","title"}, flags, analyzer);
             Term beginTime = new Term("publish_time", "2020-09-01 00:00:00");
             Term endTime = new Term("publish_time", "2020-10-01 23:59:59");
-            Query timeQuery = IntPoint.newRangeQuery("time", 20200800, 20200910);
+            Query timeQuery = IntPoint.newRangeQuery("time", 20201029, 20201031);
             BooleanClause bcTitle = new BooleanClause(termQuery, BooleanClause.Occur.MUST);
             BooleanClause bcTime = new BooleanClause(timeQuery, BooleanClause.Occur.MUST);
             BooleanQuery booleanQuery = new BooleanQuery.Builder().add(bcTitle).add(bcTime).build();
             TopDocs topDocs = null;
             if(sort_by_time)
             {
-                topDocs = searcher.search(booleanQuery, (page+1)*number, 
-                new Sort(new SortField("publish_time", SortField.Type.STRING, true)));
+                topDocs = searcher.search(termQuery, (page+1)*number);
             }
             else
             {
