@@ -223,14 +223,9 @@ public class WelcomeController
             BooleanClause bcTime = new BooleanClause(timeQuery, BooleanClause.Occur.MUST);
             BooleanQuery booleanQuery = new BooleanQuery.Builder().add(bcTitle).add(bcTime).build();
             TopDocs topDocs = null;
-            if(sort_by_time)
-            {
-                topDocs = searcher.search(termQuery, (page+1)*number);
-            }
-            else
-            {
+           
                 topDocs = searcher.search(booleanQuery, (page + 1) * number);
-            }
+           
             System.out.println("queryTime: " + (System.currentTimeMillis()-queryStart) + "ms");
             long jsonStart = System.currentTimeMillis();
             //for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
