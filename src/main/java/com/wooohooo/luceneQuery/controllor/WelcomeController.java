@@ -73,7 +73,7 @@ public class WelcomeController
 
     @GetMapping("/queryNews")
     public JSONObject queryNews(@RequestParam(name = "name")String name,@RequestParam(name = "page")String page,
-                        @RequestParam(name="number")String number, @RequestParam(name="relation")String relation)
+                        @RequestParam(name="number")String number, @RequestParam(name="relation")int relation)
     {
         long begintime = System.currentTimeMillis();
         System.out.println("name= " + name);
@@ -97,13 +97,11 @@ public class WelcomeController
                 e.printStackTrace();
             }
         }
-        boolean sort_by_time = false;
-        if(!relation.equals("1")) sort_by_time = true;
         int _page = Integer.parseInt(page);
         int _number = Integer.parseInt(number);
         JSONObject result = new JSONObject();
         JSONArray newslist = null;
-        newslist = query("./index", name, _page, _number, sort_by_time);
+        newslist = query("./index", name, _page, _number, relation);
         result.put("data", newslist);
         result.put("total", prevTotalNum);
         long endtinme=System.currentTimeMillis();
@@ -161,8 +159,13 @@ public class WelcomeController
         for (Map.Entry<String, Object> entry : entrySet) {
             if(entry.getKey().equals("publish_time"))
             {
-                document.add(new StringField("publish_time", entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
-                document.add(new SortedDocValuesField("publish_time", new BytesRef((entry.getValue()==null?"":entry.getValue()).toString().getBytes()))); 
+                document.add(new TextField(entry.getKey(), entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
+                        if(entry.getValue() == null) continue;
+                        String newsTime = entry.getValue().toString();
+                        String year = newsTime.substring(0,4);
+                        String month = newsTime.substring(5,7);
+                        String day = newsTime.substring(8,10);
+                        document.add(new IntPoint("time", Integer.parseInt(year) * 10000 + Integer.parseInt(month) * 100 + Integer.parseInt(day)));
             }
             else
             {
@@ -199,7 +202,7 @@ public class WelcomeController
         
     }
 
-    public JSONArray query(String indexDir, String queryContent, int page, int number, boolean sort_by_time)
+    public JSONArray query(String indexDir, String queryContent, int page, int number, int timeRange)
     {
         IndexReader reader = null;
         JSONArray result = new JSONArray();
@@ -215,8 +218,6 @@ public class WelcomeController
                     BooleanClause.Occur.SHOULD};
             //双词条搜索
             Query termQuery = MultiFieldQueryParser.parse(queryContent,new String[]{"content","title"}, flags, analyzer);
-            Term beginTime = new Term("publish_time", "2020-09-01 00:00:00");
-            Term endTime = new Term("publish_time", "2020-10-01 23:59:59");
             Query timeQuery = IntPoint.newRangeQuery("time", 20201029, 20201031);
             BooleanClause bcTitle = new BooleanClause(termQuery, BooleanClause.Occur.MUST);
             BooleanClause bcTime = new BooleanClause(timeQuery, BooleanClause.Occur.MUST);

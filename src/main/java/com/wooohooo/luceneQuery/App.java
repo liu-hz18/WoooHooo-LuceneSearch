@@ -82,17 +82,18 @@ public class App
         //统计数据库内数据总量
         MongoCollection collection = mongoDatabase.getCollection("news");
         int count = (int)collection.countDocuments();
-        collection = null;
+        //collection = null;
         System.out.println("count: "+ count);
         //测试 只爬100000条
         //将爬虫数据库内数据建立索引 
         for(int i=0;i<count;i+=20000)
         {
             //每次建立一批索引，每批20000个
-            //addIndexDoc("./index", mongoDatabase, i);
+            addIndexDoc("./index", mongoDatabase, i);
         }
         optimazeIndex("./index");
         System.out.println("索引文档添加成功");
+        mongoDatabase=null;
         }
     }
     
