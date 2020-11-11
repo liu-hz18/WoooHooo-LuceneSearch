@@ -39,7 +39,7 @@ public class MongoDB
     
     public List<Set<Map.Entry<String, Object>>> getDocument(MongoDatabase mongoDatabase, int count) {
         //遍历mongo数据库
-        MongoCollection<Document> collection = mongoDatabase.getCollection("dynamicNews");
+        MongoCollection<Document> collection = mongoDatabase.getCollection("news");
         //每次读取20000条
         int limitSize = 20000;
         MongoCursor cursor = null;

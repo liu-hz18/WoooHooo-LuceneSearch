@@ -19,6 +19,9 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.SortedDocValuesField;
+import org.apache.lucene.document.BinaryPoint;
+import org.apache.lucene.document.IntPoint;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -27,6 +30,7 @@ import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.PointRangeQuery;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -201,23 +205,31 @@ public class WelcomeController
         JSONArray result = new JSONArray();
         try {
             long queryStart = System.currentTimeMillis();
-            
+
+            Date curDate = new Date();
+            System.out.println(curDate.toString());
             //设置分词器
             Analyzer analyzer = new SmartChineseAnalyzer();
             //创建解析器
             BooleanClause.Occur[] flags = {BooleanClause.Occur.SHOULD,
                     BooleanClause.Occur.SHOULD};
             //双词条搜索
-            Query query = MultiFieldQueryParser.parse(queryContent,new String[]{"content","title"}, flags, analyzer);
+            Query termQuery = MultiFieldQueryParser.parse(queryContent,new String[]{"content","title"}, flags, analyzer);
+            Term beginTime = new Term("publish_time", "2020-09-01 00:00:00");
+            Term endTime = new Term("publish_time", "2020-10-01 23:59:59");
+            Query timeQuery = IntPoint.newRangeQuery("time", 20200800, 20200910);
+            BooleanClause bcTitle = new BooleanClause(termQuery, BooleanClause.Occur.MUST);
+            BooleanClause bcTime = new BooleanClause(timeQuery, BooleanClause.Occur.MUST);
+            BooleanQuery booleanQuery = new BooleanQuery.Builder().add(bcTitle).add(bcTime).build();
             TopDocs topDocs = null;
             if(sort_by_time)
             {
-                topDocs = searcher.search(query, (page+1)*number, 
+                topDocs = searcher.search(booleanQuery, (page+1)*number, 
                 new Sort(new SortField("publish_time", SortField.Type.STRING, true)));
             }
             else
             {
-                topDocs = searcher.search(query, (page + 1) * number);
+                topDocs = searcher.search(booleanQuery, (page + 1) * number);
             }
             System.out.println("queryTime: " + (System.currentTimeMillis()-queryStart) + "ms");
             long jsonStart = System.currentTimeMillis();

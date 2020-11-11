@@ -25,6 +25,8 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.SortedDocValuesField;
+import org.apache.lucene.document.BinaryPoint;
+import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -83,10 +85,10 @@ public class App
         System.out.println("count: "+ count);
         //测试 只爬100000条
         //将爬虫数据库内数据建立索引 
-        for(int i=0;i<count;i+=20000)
+        for(int i=0;i<200000;i+=20000)
         {
             //每次建立一批索引，每批20000个
-            //addIndexDoc("./index", mongoDatabase, i);
+            addIndexDoc("./index", mongoDatabase, i);
         }
         optimazeIndex("./index");
         System.out.println("索引文档添加成功");
@@ -134,13 +136,13 @@ public class App
         
         ConfigurableApplicationContext applicationContext = SpringApplication.run(App.class, args);
     
-        IncrementalIndexThread incrementalThread = new IncrementalIndexThread();
-        incrementalThread.start(); 
+        //IncrementalIndexThread incrementalThread = new IncrementalIndexThread();
+        //incrementalThread.start(); 
     }
 
     public static MongoDatabase connectToMongo()
     {
-        MongoClient mongoClient = new MongoClient("localhost", 30001);
+        MongoClient mongoClient = new MongoClient("49.233.52.61", 30001);
         return mongoClient.getDatabase("NewsCopy");
     }
 
@@ -196,8 +198,13 @@ public class App
                 for (Map.Entry<String, Object> entry : entrySetList.get(i)) {
                     if(entry.getKey().equals("publish_time"))
                     {
-                        document.add(new StringField("publish_time", entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
-                        document.add(new SortedDocValuesField("publish_time", new BytesRef((entry.getValue()==null?"":entry.getValue()).toString().getBytes()))); 
+                        document.add(new TextField(entry.getKey(), entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
+                        if(entry.getValue() == null) continue;
+                        String newsTime = entry.getValue().toString();
+                        String year = newsTime.substring(0,4);
+                        String month = newsTime.substring(5,7);
+                        String day = newsTime.substring(8,10);
+                        document.add(new IntPoint("time", Integer.parseInt(year) * 10000 + Integer.parseInt(month) * 100 + Integer.parseInt(day)));                    
                     }
                     else
                         document.add(new TextField(entry.getKey(), entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
