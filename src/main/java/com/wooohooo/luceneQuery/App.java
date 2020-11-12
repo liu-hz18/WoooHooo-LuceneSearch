@@ -134,14 +134,9 @@ public class App
     }
     public static void main( String[] args )
     {
-        StaticIndexThread staticThread = new StaticIndexThread();
-        staticThread.start();
-        String format = "yyyyMMdd";
-        Date date = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat(format);
-        Date lastWeek = new Date();
-        lastWeek.setTime(date.getTime() - 1000 * 60 * 60 * 24 * 7);
-        System.out.println(sdf.format(lastWeek));
+        //StaticIndexThread staticThread = new StaticIndexThread();
+        //staticThread.start();
+        optimazeIndex("./index");
         ConfigurableApplicationContext applicationContext = SpringApplication.run(App.class, args);
         
         //IncrementalIndexThread incrementalThread = new IncrementalIndexThread();

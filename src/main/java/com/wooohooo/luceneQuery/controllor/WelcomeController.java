@@ -263,7 +263,7 @@ public class WelcomeController
                 result.add(jsonObject);
             }
             System.out.println("jsonTime: " + (System.currentTimeMillis() - jsonStart) + "ms");
-            prevTotalNum = topDocs.scoreDocs.length;
+            prevTotalNum = topDocs.totalHits;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -282,22 +282,25 @@ public class WelcomeController
             case 1:
                 Date yesterday = new Date();
                 yesterday.setTime(date.getTime() - 1000*60*60*24);
+                System.out.println(dateFormat.format(yesterday));
                 int yesterdayInt = Integer.parseInt(dateFormat.format(yesterday));
-                return IntPoint.newRangeQuery("time", today, yesterdayInt);
+                return IntPoint.newRangeQuery("time", yesterdayInt, today);
                 //break;
             //周
             case 2:
                 Date lastWeek = new Date();
                 lastWeek.setTime(date.getTime() - 1000*60*60*24*7);
+                System.out.println(dateFormat.format(lastWeek));
                 int lastWeekInt = Integer.parseInt(dateFormat.format(lastWeek));
-                return IntPoint.newRangeQuery("time", today, lastWeekInt);
+                return IntPoint.newRangeQuery("time", lastWeekInt, today);
                 //break;
             //月
             case 3:
                 Date lastMonth = new Date();
                 lastMonth.setTime(date.getTime() - 1000*60*60*24*30);
+                System.out.println(dateFormat.format(lastMonth));
                 int lastMonthInt = Integer.parseInt(dateFormat.format(lastMonth));
-                return IntPoint.newRangeQuery("time", today, lastMonthInt);
+                return IntPoint.newRangeQuery("time", lastMonthInt, today);
                 //break;
             default:
                 return null;
