@@ -60,6 +60,8 @@ import java.io.*;
 @RestController
 public class WelcomeController
 {
+    //最低的相关度
+    private float scoreOffset = 0.5f;
     //上次的结果个数
     private int prevTotalNum = 0;
     private int test = -1;
@@ -78,10 +80,10 @@ public class WelcomeController
                         @RequestParam(name="number")String number, @RequestParam(name="relation")int relation)
     {
         long begintime = System.currentTimeMillis();
-        System.out.println("name= " + name);
-        System.out.println("page=" +page);
-        System.out.println("number=" + number);
-        System.out.println("relation="+ relation);
+        //System.out.println("name= " + name);
+        //System.out.println("page=" +page);
+        //System.out.println("number=" + number);
+        //System.out.println("relation="+ relation);
         if(test == -1)
         {
             try{
@@ -112,10 +114,20 @@ public class WelcomeController
     }
 
     //获取动态新闻
-    @PostMapping("/")
-    public String getNews(@RequestParam(name = "news")JSONObject newsObject)
+    @RequestMapping(value = "/postNews", method = RequestMethod.POST)
+    public String getNews(@RequestBody String object)
     {
+        //System.out.println(object);
+        System.out.println("receive news");
+        JSONObject newsObject =JSON.parseObject(object);
+        //System.out.println(newsObject);
+        //System.out.pritnln(newsObject);
+        //for(int i=0;i<newsList.length;i++)
+        //{
+        //    System.out.println(newsList[i]);
+        //}
         JSONArray newsList = newsObject.getJSONArray("news");
+        //System.out.println(newsList.toString());
         addIndex("./index", newsList);
         return "receive";
     }
@@ -140,6 +152,7 @@ public class WelcomeController
                 Document document = new Document();
                 JSONObject newsObject = newsList.getJSONObject(i);
                 document = jsonToDoc(newsObject);
+                writer.addDocument(document);
             }
             dynamicNewsNum += newsList.size();
             //每100000条索引创建后合并优化索引
@@ -159,11 +172,13 @@ public class WelcomeController
         Document document = new Document();
         Set<Map.Entry<String, Object>> entrySet = newsObject.entrySet();
         for (Map.Entry<String, Object> entry : entrySet) {
+            System.out.println(entry.getKey());
             if(entry.getKey().equals("publish_time"))
             {
                 document.add(new TextField(entry.getKey(), entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
                         if(entry.getValue() == null) continue;
                         String newsTime = entry.getValue().toString();
+                System.out.println(newsTime);
                         String year = newsTime.substring(0,4);
                         String month = newsTime.substring(5,7);
                         String day = newsTime.substring(8,10);
@@ -246,6 +261,11 @@ public class WelcomeController
                 for(int j=0;j<8;j++)
                 {
                     IndexableField field = document.getField(tag[j]);
+                    if(field == null)
+                    {
+                        jsonObject.put(tag[j], "");
+                        continue;
+                    }
                     if(j == 1)
                     {
                         String content = field.stringValue();
@@ -297,7 +317,7 @@ public class WelcomeController
             //月
             case 3:
                 Date lastMonth = new Date();
-                lastMonth.setTime(date.getTime() - 1000*60*60*24*30);
+                lastMonth.setTime(date.getTime() - (long)1000*60*60*24*30);
                 System.out.println(dateFormat.format(lastMonth));
                 int lastMonthInt = Integer.parseInt(dateFormat.format(lastMonth));
                 return IntPoint.newRangeQuery("time", lastMonthInt, today);
