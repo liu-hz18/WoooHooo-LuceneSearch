@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jdk.nashorn.internal.runtime.JSONListAdapter;
+import sun.tools.tree.BinaryEqualityExpression;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -44,6 +45,7 @@ import org.apache.lucene.util.BytesRef;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import javax.sound.midi.MidiSystem;
@@ -218,14 +220,19 @@ public class WelcomeController
                     BooleanClause.Occur.SHOULD};
             //双词条搜索
             Query termQuery = MultiFieldQueryParser.parse(queryContent,new String[]{"content","title"}, flags, analyzer);
-            Query timeQuery = IntPoint.newRangeQuery("time", 20201029, 20201031);
-            BooleanClause bcTitle = new BooleanClause(termQuery, BooleanClause.Occur.MUST);
-            BooleanClause bcTime = new BooleanClause(timeQuery, BooleanClause.Occur.MUST);
-            BooleanQuery booleanQuery = new BooleanQuery.Builder().add(bcTitle).add(bcTime).build();
+            Query timeQuery = rangeQuery(timeRange);
             TopDocs topDocs = null;
-           
+            if(timeQuery == null)
+            {
+                topDocs = searcher.search(termQuery, (page+1)*number);
+            }
+            else
+            {
+                BooleanClause bcTitle = new BooleanClause(termQuery, BooleanClause.Occur.MUST);
+                BooleanClause bcTime = new BooleanClause(timeQuery, BooleanClause.Occur.MUST);
+                BooleanQuery booleanQuery = new BooleanQuery.Builder().add(bcTitle).add(bcTime).build();
                 topDocs = searcher.search(booleanQuery, (page + 1) * number);
-           
+            }
             System.out.println("queryTime: " + (System.currentTimeMillis()-queryStart) + "ms");
             long jsonStart = System.currentTimeMillis();
             //for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
@@ -256,10 +263,45 @@ public class WelcomeController
                 result.add(jsonObject);
             }
             System.out.println("jsonTime: " + (System.currentTimeMillis() - jsonStart) + "ms");
-            prevTotalNum = topDocs.totalHits;
+            prevTotalNum = topDocs.scoreDocs.length;
         } catch (Exception e) {
             e.printStackTrace();
         }
         return result;
+    }
+
+    Query rangeQuery(int timeRange)
+    {
+        Date date = new Date();
+        String format = "yyyyMMdd";
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+        int today = Integer.parseInt(dateFormat.format(date));
+        switch(timeRange)
+        {
+            //天
+            case 1:
+                Date yesterday = new Date();
+                yesterday.setTime(date.getTime() - 1000*60*60*24);
+                int yesterdayInt = Integer.parseInt(dateFormat.format(yesterday));
+                return IntPoint.newRangeQuery("time", today, yesterdayInt);
+                //break;
+            //周
+            case 2:
+                Date lastWeek = new Date();
+                lastWeek.setTime(date.getTime() - 1000*60*60*24*7);
+                int lastWeekInt = Integer.parseInt(dateFormat.format(lastWeek));
+                return IntPoint.newRangeQuery("time", today, lastWeekInt);
+                //break;
+            //月
+            case 3:
+                Date lastMonth = new Date();
+                lastMonth.setTime(date.getTime() - 1000*60*60*24*30);
+                int lastMonthInt = Integer.parseInt(dateFormat.format(lastMonth));
+                return IntPoint.newRangeQuery("time", today, lastMonthInt);
+                //break;
+            default:
+                return null;
+                //break;
+        }
     }
 }

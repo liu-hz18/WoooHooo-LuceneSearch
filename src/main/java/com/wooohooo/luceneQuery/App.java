@@ -58,6 +58,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.*;
 import java.lang.Thread;
+import java.text.SimpleDateFormat;
 import javax.sound.midi.MidiSystem;
 
 import java.io.*;
@@ -89,7 +90,7 @@ public class App
         for(int i=0;i<count;i+=20000)
         {
             //每次建立一批索引，每批20000个
-            addIndexDoc("./index", mongoDatabase, i);
+            //addIndexDoc("./index", mongoDatabase, i);
         }
         optimazeIndex("./index");
         System.out.println("索引文档添加成功");
@@ -135,9 +136,14 @@ public class App
     {
         StaticIndexThread staticThread = new StaticIndexThread();
         staticThread.start();
-        
+        String format = "yyyyMMdd";
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        Date lastWeek = new Date();
+        lastWeek.setTime(date.getTime() - 1000 * 60 * 60 * 24 * 7);
+        System.out.println(sdf.format(lastWeek));
         ConfigurableApplicationContext applicationContext = SpringApplication.run(App.class, args);
-    
+        
         //IncrementalIndexThread incrementalThread = new IncrementalIndexThread();
         //incrementalThread.start(); 
     }
