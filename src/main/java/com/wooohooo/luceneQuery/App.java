@@ -134,11 +134,11 @@ public class App
     }
     public static void main( String[] args )
     {
-        //StaticIndexThread staticThread = new StaticIndexThread();
-        //staticThread.start();
+        StaticIndexThread staticThread = new StaticIndexThread();
+        staticThread.start();
         //optimazeIndex("./index");
         System.out.println("optimaze finish");
-        ConfigurableApplicationContext applicationContext = SpringApplication.run(App.class, args);
+        SpringApplication.run(App.class, args);
         
         //IncrementalIndexThread incrementalThread = new IncrementalIndexThread();
         //incrementalThread.start(); 
