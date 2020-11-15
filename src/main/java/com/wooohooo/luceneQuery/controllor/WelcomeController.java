@@ -9,9 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jdk.nashorn.internal.runtime.JSONListAdapter;
-import sun.tools.tree.BinaryEqualityExpression;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer;
@@ -60,6 +57,7 @@ import java.io.*;
 @RestController
 public class WelcomeController
 {
+    private long postTime = System.currentTimeMillis();
     //最低的相关度
     private float scoreOffset = 0.5f;
     //上次的结果个数
@@ -117,15 +115,12 @@ public class WelcomeController
     @RequestMapping(value = "/postNews", method = RequestMethod.POST)
     public String getNews(@RequestBody String object)
     {
-        //System.out.println(object);
-        System.out.println("receive news");
+         //System.out.println(object);
+        Date date = new Date();
+        System.out.println("receive news: "+ date.toString());
         JSONObject newsObject =JSON.parseObject(object);
-        //System.out.println(newsObject);
-        //System.out.pritnln(newsObject);
-        //for(int i=0;i<newsList.length;i++)
-        //{
-        //    System.out.println(newsList[i]);
-        //}
+
+
         JSONArray newsList = newsObject.getJSONArray("news");
         //System.out.println(newsList.toString());
         addIndex("./index", newsList);
@@ -172,7 +167,7 @@ public class WelcomeController
         Document document = new Document();
         Set<Map.Entry<String, Object>> entrySet = newsObject.entrySet();
         for (Map.Entry<String, Object> entry : entrySet) {
-            System.out.println(entry.getKey());
+            //System.out.println(entry.getKey());
             if(entry.getKey().equals("publish_time"))
             {
                 document.add(new TextField(entry.getKey(), entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
@@ -239,19 +234,31 @@ public class WelcomeController
             TopDocs topDocs = null;
             if(timeQuery == null)
             {
-                topDocs = searcher.search(termQuery, (page+1)*number);
+                topDocs = searcher.search(termQuery, 100 * 3000);
             }
             else
             {
                 BooleanClause bcTitle = new BooleanClause(termQuery, BooleanClause.Occur.MUST);
                 BooleanClause bcTime = new BooleanClause(timeQuery, BooleanClause.Occur.MUST);
                 BooleanQuery booleanQuery = new BooleanQuery.Builder().add(bcTitle).add(bcTime).build();
-                topDocs = searcher.search(booleanQuery, (page + 1) * number);
+                topDocs = searcher.search(booleanQuery, 100 * 3000);
             }
             System.out.println("queryTime: " + (System.currentTimeMillis()-queryStart) + "ms");
             long jsonStart = System.currentTimeMillis();
             //for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
+            int num = 0;
+            int totalNum = topDocs.scoreDocs.length;
+            long numStart = System.currentTimeMillis();
+            for(;num < totalNum; num++)
+            {
+                if(topDocs.scoreDocs[num].score < scoreOffset)
+                    break; 
+            }
+            System.out.println("numTime: " +(System.currentTimeMillis() - numStart) + "ms");
+            prevTotalNum = num + 1;
             for(int i = page * number; i < page * number +number ;i++){
+                if(num < i)
+                    return result;
                 //拿到文档实例
                 Document document = searcher.doc(topDocs.scoreDocs[i].doc);
                 //获取所有文档字段
