@@ -36,5 +36,11 @@ public class AppTest
     {
         assertTrue( true );
     }
+
+    public void testConnectToMongo()
+    {
+        
+        assertTrue(App.connectToMongo() != null);
+    }
 }
 

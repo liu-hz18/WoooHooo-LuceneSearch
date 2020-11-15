@@ -297,7 +297,7 @@ public class WelcomeController
         return result;
     }
 
-    Query rangeQuery(int timeRange)
+    public Query rangeQuery(int timeRange)
     {
         Date date = new Date();
         String format = "yyyyMMdd";
