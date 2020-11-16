@@ -35,7 +35,10 @@ public class AppTest
      */
     public void testApp()
     {
-        assertTrue( true );
+        String []args = new String[5];
+        App.main(args);
+        assertTrue(App.verifyStaticThread());
+        assertTrue(App.verifyIncrementalThread());
     }
 
     public void testConnectToMongo()
@@ -43,14 +46,13 @@ public class AppTest
         MongoDatabase dataBase = null;
         int count = 100;
         String indexDir = "./index";
-        String errorIndex = "./index1";
         assertTrue((dataBase = App.connectToMongo()) != null);
         assertTrue(App.verifyCreateIndex(indexDir));
         assertTrue(App.verifyCreateIndex(null));
         assertTrue(App.verifyAddIndexDoc(indexDir, dataBase, count));
-        assertTrue(App.verifyAddIndexDoc(errorIndex, dataBase, count));
+        assertTrue(App.verifyAddIndexDoc(null, dataBase, count));
         assertTrue(App.verifyOptimazeIndex(indexDir));
-        assertTrue(App.verifyOptimazeIndex(errorIndex));
+        assertTrue(App.verifyOptimazeIndex(null));
     }
 }
 

@@ -15,7 +15,15 @@ public class WelcomControllerTest extends TestCase{
     public void testGetNews()
     {
         JSONObject newsObject = new JSONObject();
-        newsObject.put("news", new JSONArray());
+        JSONArray newsList = new JSONArray();
+        JSONObject news0 = new JSONObject();
+        JSONObject news1 = new JSONObject();
+        news0.put("publish_time", "2020-11-16 15:30");
+        news0.put("content", "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
+        news1.put("content", "1");
+        newsList.add(news0);
+        newsList.add(news1);
+        newsObject.put("news", newsList);
 
         WelcomeController welcomeController = new WelcomeController();
         assertTrue(welcomeController.getNews(JSON.toJSONString(newsObject)).equals("receive"));
@@ -64,5 +72,13 @@ public class WelcomControllerTest extends TestCase{
     {
         WelcomeController welcomeController = new WelcomeController();
         assertTrue(welcomeController.welcome() != null);
+    }
+
+    public void testOptimaze()
+    {
+        String indexDir = "./index";
+        WelcomeController welcomeController = new WelcomeController();
+        assertTrue(welcomeController.verifyOptimazeIndex(indexDir));
+        assertTrue(welcomeController.verifyOptimazeIndex(null));
     }
 }

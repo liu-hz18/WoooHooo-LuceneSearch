@@ -57,12 +57,8 @@ public class MongoDB
             Document document = (Document)cursor.next();
             entrySetList.add(document.entrySet());
         }
-        if(cursor != null)
-        {
-            cursor.close();
-            //cursor = null;
-        }
-        //collection = null;
+        cursor.close();
+        
         return entrySetList;
     }
 }
