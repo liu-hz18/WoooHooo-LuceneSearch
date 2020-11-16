@@ -18,7 +18,7 @@ public class WelcomControllerTest extends TestCase{
         newsObject.put("news", new JSONArray());
 
         WelcomeController welcomeController = new WelcomeController();
-        //assertTrue(welcomeController.getNews(JSON.toJSONString(newsObject)).equals("receive"));
+        assertTrue(welcomeController.getNews(JSON.toJSONString(newsObject)).equals("receive"));
     }
     
     public void testRangeQuery()
@@ -44,9 +44,9 @@ public class WelcomControllerTest extends TestCase{
         String testCase_2 = "华为";
 
         WelcomeController welcomeController = new WelcomeController();
-        //assertTrue(welcomeController.queryNews(testCase_0, "0", "1", 0) != null);
-        //assertTrue(welcomeController.queryNews(testCase_1, "0", "1", 0) != null);
-        //assertTrue(welcomeController.queryNews(testCase_2, "0", "1", 0) != null);
+        assertTrue(welcomeController.queryNews(testCase_0, "0", "1", 0) != null);
+        assertTrue(welcomeController.queryNews(testCase_1, "0", "1", 0) != null);
+        assertTrue(welcomeController.queryNews(testCase_2, "0", "1", 0) != null);
     }
 
     public void testQuery()
@@ -57,6 +57,12 @@ public class WelcomControllerTest extends TestCase{
         WelcomeController welcomeController = new WelcomeController();
         assertTrue(welcomeController.query(null, testCase0, 0, 10, 0) != null);
         assertTrue(welcomeController.query(null, testCase1, 0, 10, 0) != null);
-        assertTrue(welcomeController.query(null, testCase2, 0, 10, 0) != null);
+        assertTrue(welcomeController.query(null, testCase2, 0, 10, 1) != null);
+    }
+
+    public void testWelcome()
+    {
+        WelcomeController welcomeController = new WelcomeController();
+        assertTrue(welcomeController.welcome() != null);
     }
 }
