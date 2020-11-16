@@ -40,7 +40,7 @@ public class App
 {
     private static MongoDB mongoDB = new MongoDB(); 
     private static int incrementalNewsNum = 0;
-    private static long timeInterval = 3600 * 1000;
+    private static long timeInterval = 20;
 
     static class StaticIndexThread extends Thread{
         @Override
@@ -93,26 +93,36 @@ public class App
                     {
                         optimazeIndex("./index");
                     }
+                    
                     this.sleep(timeInterval);
+                    break;
                 }
                 catch(Exception e)
                 {
                     e.printStackTrace();
+                    break;
                 }
             }
             
         }
     }
-    public static void main( String[] args )
+
+    public static Boolean verifyStaticThread()
     {
         StaticIndexThread staticThread = new StaticIndexThread();
         staticThread.start();
-        //optimazeIndex("./index");
-        System.out.println("optimaze finish");
+        return true;
+    }
+
+    public static Boolean verifyIncrementalThread()
+    {
+        IncrementalIndexThread incrementalIndexThread = new IncrementalIndexThread();
+        incrementalIndexThread.start();
+        return true;
+    }
+    public static void main( String[] args )
+    {
         SpringApplication.run(App.class, args);
-        
-        //IncrementalIndexThread incrementalThread = new IncrementalIndexThread();
-        //incrementalThread.start(); 
     }
 
     public static MongoDatabase connectToMongo()
@@ -162,15 +172,9 @@ public class App
 
     public static Boolean verifyAddIndexDoc(String indexDir, MongoDatabase mongoDatabase, int count)
     {
-        try{
-            addIndexDoc(indexDir, mongoDatabase, count);
-            return true;
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-            return true;
-        }
+
+        addIndexDoc(indexDir, mongoDatabase, count);
+        return true;
     }
 
     /**
@@ -227,15 +231,9 @@ public class App
 
     public static Boolean verifyOptimazeIndex(String indexDir)
     {
-        try{
             optimazeIndex(indexDir);
             return true;
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-            return true;
-        }
+        
     }
 
     public static void optimazeIndex(String indexDir)

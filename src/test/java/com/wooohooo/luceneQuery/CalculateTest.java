@@ -31,4 +31,16 @@ public class CalculateTest extends TestCase
         assertTrue(cal.subtract(100, 50) == 50);
         assertTrue(cal.subtract(50, 100) == -50);
     }
+
+    public void testMultiply()
+    {
+        Calculate cal = new Calculate();
+        assertTrue(cal.multiply(3, 4) == 12);
+    }
+
+    public void testDivide()
+    {
+        Calculate cal = new Calculate();
+        assertTrue(cal.divide(4, 2) == 2);
+    }
 }
