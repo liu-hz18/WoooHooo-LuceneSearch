@@ -10,7 +10,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.util.IOUtils;
-
+import com.wooohooo.luceneQuery.controllor.WelcomeController;
 public class WelcomControllerTest extends TestCase{
     public void testGetNews()
     {
@@ -47,5 +47,16 @@ public class WelcomControllerTest extends TestCase{
         //assertTrue(welcomeController.queryNews(testCase_0, "0", "1", 0) != null);
         //assertTrue(welcomeController.queryNews(testCase_1, "0", "1", 0) != null);
         //assertTrue(welcomeController.queryNews(testCase_2, "0", "1", 0) != null);
+    }
+
+    public void testQuery()
+    {
+        String testCase0 = "iphone12";
+        String testCase1 = "美国";
+        String testCase2 = "华为";
+        WelcomeController welcomeController = new WelcomeController();
+        assertTrue(welcomeController.query(null, testCase0, 0, 10, 0) != null);
+        assertTrue(welcomeController.query(null, testCase1, 0, 10, 0) != null);
+        assertTrue(welcomeController.query(null, testCase2, 0, 10, 0) != null);
     }
 }
