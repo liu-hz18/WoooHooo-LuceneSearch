@@ -118,6 +118,7 @@ public class WelcomeController
          //System.out.println(object);
         Date date = new Date();
         System.out.println("receive news: "+ date.toString());
+        System.out.println(object);
         JSONObject newsObject =JSON.parseObject(object);
 
 
@@ -151,8 +152,7 @@ public class WelcomeController
             }
             dynamicNewsNum += newsList.size();
             //每100000条索引创建后合并优化索引
-            if(dynamicNewsNum / 100000 > existNum)
-                optimazeIndex("./index");
+            optimazeIndex("./index");
         }
         catch(Exception e){
             e.printStackTrace();
