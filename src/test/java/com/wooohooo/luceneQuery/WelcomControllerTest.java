@@ -10,7 +10,6 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.util.IOUtils;
-import com.wooohooo.luceneQuery.controller.WelcomeController;
 
 public class WelcomControllerTest extends TestCase{
     public void testGetNews()
