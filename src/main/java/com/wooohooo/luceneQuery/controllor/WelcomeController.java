@@ -1,4 +1,4 @@
-package com.wooohooo.luceneQuery.controller;
+package com.wooohooo.luceneQuery.controllor;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -312,7 +312,6 @@ public class WelcomeController
                 System.out.println(dateFormat.format(yesterday));
                 int yesterdayInt = Integer.parseInt(dateFormat.format(yesterday));
                 return IntPoint.newRangeQuery("time", yesterdayInt, today);
-                //break;
             //周
             case 2:
                 Date lastWeek = new Date();
@@ -320,7 +319,6 @@ public class WelcomeController
                 System.out.println(dateFormat.format(lastWeek));
                 int lastWeekInt = Integer.parseInt(dateFormat.format(lastWeek));
                 return IntPoint.newRangeQuery("time", lastWeekInt, today);
-                //break;
             //月
             case 3:
                 Date lastMonth = new Date();
@@ -331,7 +329,6 @@ public class WelcomeController
                 //break;
             default:
                 return null;
-                //break;
         }
     }
 }

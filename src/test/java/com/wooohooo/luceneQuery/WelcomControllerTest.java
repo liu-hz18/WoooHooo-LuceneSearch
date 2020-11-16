@@ -24,18 +24,18 @@ public class WelcomControllerTest extends TestCase{
     
     public void testRangeQuery()
     {
-        int example_0 = 0;
-        int example_1 = 1;
-        int example_2 = 2;
-        int example_3 = 3;
-        int example_4 = 10000;
+        int example0 = 0;
+        int example1 = 1;
+        int example2 = 2;
+        int example3 = 3;
+        int example4 = 10000;
 
         WelcomeController welcomeController = new WelcomeController();
-        assertTrue(welcomeController.rangeQuery(example_0) == null);
-        assertTrue(welcomeController.rangeQuery(example_1) != null);
-        assertTrue(welcomeController.rangeQuery(example_2) != null);
-        assertTrue(welcomeController.rangeQuery(example_3) != null);
-        assertTrue(welcomeController.rangeQuery(example_4) == null);
+        assertTrue(welcomeController.rangeQuery(example0) == null);
+        assertTrue(welcomeController.rangeQuery(example1) != null);
+        assertTrue(welcomeController.rangeQuery(example2) != null);
+        assertTrue(welcomeController.rangeQuery(example3) != null);
+        assertTrue(welcomeController.rangeQuery(example4) == null);
     }
 
     public void testQueryNews()
