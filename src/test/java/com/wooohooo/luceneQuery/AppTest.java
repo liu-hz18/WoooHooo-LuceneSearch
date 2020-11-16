@@ -5,6 +5,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import com.mongodb.client.MongoDatabase;
 /**
  * Unit test for simple App.
  */
@@ -39,8 +40,17 @@ public class AppTest
 
     public void testConnectToMongo()
     {
-        
-        assertTrue(App.connectToMongo() != null);
+        MongoDatabase dataBase = null;
+        int count = 100;
+        String indexDir = "./index";
+        String errorIndex = "./index1";
+        assertTrue((dataBase = App.connectToMongo()) != null);
+        assertTrue(App.verifyCreateIndex(indexDir));
+        assertTrue(App.verifyCreateIndex(null));
+        assertTrue(App.verifyAddIndexDoc(indexDir, dataBase, count));
+        assertTrue(App.verifyAddIndexDoc(errorIndex, dataBase, count));
+        assertTrue(App.verifyOptimazeIndex(indexDir));
+        assertTrue(App.verifyOptimazeIndex(errorIndex));
     }
 }
 

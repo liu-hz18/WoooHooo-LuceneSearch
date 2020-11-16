@@ -186,6 +186,19 @@ public class WelcomeController
         }
         return document;
     }
+
+    public Boolean verifyOptimazeIndex(String indexDir)
+    {
+        try{
+            optimazeIndex(indexDir);
+            return true;
+        }
+        catch(Exception e){
+            e.printStackTrace();
+            return true;
+        }
+    }
+
     //优化索引
     public void optimazeIndex(String indexDir)
     {

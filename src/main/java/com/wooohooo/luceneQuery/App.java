@@ -59,7 +59,7 @@ public class App
         System.out.println("count: "+ count);
         //测试 只爬100000条
         //将爬虫数据库内数据建立索引 
-        for(int i=0;i<count;i+=20000)
+        for(int i=0;i<50;i+=50)
         {
             //每次建立一批索引，每批20000个
             addIndexDoc(indexPath, mongoDatabase, i);
@@ -121,7 +121,20 @@ public class App
         return mongoClient.getDatabase("NewsCopy");
     }
 
-/**
+    public static Boolean verifyCreateIndex(String indexDir)
+    {
+        try{
+            createIndex(indexDir);
+            return true;
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+            return true;
+        }
+    }
+
+    /**
      * 创建索引
      *
      * @param indexDir 索引存放位置
@@ -144,6 +157,19 @@ public class App
             e.printStackTrace();
         } finally {
             IOUtils.close(writer);
+        }
+    }
+
+    public static Boolean verifyAddIndexDoc(String indexDir, MongoDatabase mongoDatabase, int count)
+    {
+        try{
+            addIndexDoc(indexDir, mongoDatabase, count);
+            return true;
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+            return true;
         }
     }
 
@@ -196,6 +222,19 @@ public class App
             e.printStackTrace();
         } finally {
             IOUtils.close(writer);
+        }
+    }
+
+    public static Boolean verifyOptimazeIndex(String indexDir)
+    {
+        try{
+            optimazeIndex(indexDir);
+            return true;
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+            return true;
         }
     }
 
