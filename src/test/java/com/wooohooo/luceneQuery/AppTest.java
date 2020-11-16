@@ -35,7 +35,7 @@ public class AppTest
      */
     public void testApp()
     {
-        String []args = new String[5];
+        String []args = {};
         App.main(args);
         assertTrue(App.verifyStaticThread());
         assertTrue(App.verifyIncrementalThread());
