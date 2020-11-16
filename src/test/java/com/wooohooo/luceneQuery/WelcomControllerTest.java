@@ -18,11 +18,15 @@ public class WelcomControllerTest extends TestCase{
         JSONArray newsList = new JSONArray();
         JSONObject news0 = new JSONObject();
         JSONObject news1 = new JSONObject();
+        JSONObject news2 = new JSONObject();
         news0.put("publish_time", "2020-11-16 15:30");
         news0.put("content", "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890");
         news1.put("content", "1");
+        news2.put("content", "2");
+        news2.put("publish_time", null);
         newsList.add(news0);
         newsList.add(news1);
+        newsList.add(news2);
         newsObject.put("news", newsList);
 
         WelcomeController welcomeController = new WelcomeController();

@@ -40,12 +40,9 @@ public class App
 {
     private static MongoDB mongoDB = new MongoDB(); 
     private static int incrementalNewsNum = 0;
-    private static long timeInterval = 20;
-
-    static class StaticIndexThread extends Thread{
-        @Override
-        public void run ()
-        {
+    
+    public static void staticIndexBuild()
+    {
         String indexPath = "./index";
             //初始化索引数据库
         createIndex(indexPath);
@@ -66,15 +63,11 @@ public class App
         }
         optimazeIndex("./index");
         System.out.println("索引文档添加成功");
-        }
     }
-    
-    static class IncrementalIndexThread extends Thread
+
+    public static void incrementalIndexBuild()
     {
-        //增量索引
-        public void run()
-        {
-            while(true)
+        while(true)
             {
                 try
                 {
@@ -82,20 +75,14 @@ public class App
                     MongoCollection collection = mongoDatabase.getCollection("dynamicNews");
                     int incrementalCount = (int)collection.countDocuments();
                     System.out.println("incrementalCount: " + incrementalCount);
-                    int existNum = incrementalNewsNum / 100000;
                     for(int i=incrementalNewsNum; i<incrementalCount; i+=20000)
                     {
                         addIndexDoc("./index", mongoDatabase, i);
                     }
                     incrementalNewsNum = incrementalCount;
-                    int newNum = incrementalNewsNum / 100000;
-                    if(newNum > existNum)
-                    {
-                        optimazeIndex("./index");
-                    }
                     
-                    this.sleep(timeInterval);
-                    break;
+                        optimazeIndex("./index");
+                        break;
                 }
                 catch(Exception e)
                 {
@@ -103,21 +90,19 @@ public class App
                     break;
                 }
             }
-            
-        }
     }
+
+    
 
     public static Boolean verifyStaticThread()
     {
-        StaticIndexThread staticThread = new StaticIndexThread();
-        staticThread.start();
+        staticIndexBuild();
         return true;
     }
 
     public static Boolean verifyIncrementalThread()
     {
-        IncrementalIndexThread incrementalIndexThread = new IncrementalIndexThread();
-        incrementalIndexThread.start();
+        incrementalIndexBuild();
         return true;
     }
     public static void main( String[] args )
@@ -133,15 +118,10 @@ public class App
 
     public static Boolean verifyCreateIndex(String indexDir)
     {
-        try{
+
             createIndex(indexDir);
             return true;
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-            return true;
-        }
+
     }
 
     /**
