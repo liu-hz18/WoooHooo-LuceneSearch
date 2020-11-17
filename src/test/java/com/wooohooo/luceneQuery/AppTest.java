@@ -36,9 +36,11 @@ public class AppTest
     public void testApp()
     {
         String []args = {};
+        String indexDir = "./index";
         App.main(args);
         assertTrue(App.verifyStaticThread());
-        assertTrue(App.verifyIncrementalThread());
+        assertTrue(App.verifyIncrementalThread(indexDir));
+        assertTrue(App.verifyIncrementalThread(null));
     }
 
     public void testConnectToMongo()

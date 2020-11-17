@@ -118,7 +118,6 @@ public class WelcomeController
          //System.out.println(object);
         Date date = new Date();
         System.out.println("receive news: "+ date.toString());
-        System.out.println(object);
         JSONObject newsObject =JSON.parseObject(object);
 
 
@@ -189,14 +188,8 @@ public class WelcomeController
 
     public Boolean verifyOptimazeIndex(String indexDir)
     {
-        try{
-            optimazeIndex(indexDir);
-            return true;
-        }
-        catch(Exception e){
-            e.printStackTrace();
-            return true;
-        }
+        optimazeIndex(indexDir);
+        return true;
     }
 
     //优化索引
@@ -270,8 +263,6 @@ public class WelcomeController
             System.out.println("numTime: " +(System.currentTimeMillis() - numStart) + "ms");
             prevTotalNum = num + 1;
             for(int i = page * number; i < page * number +number ;i++){
-                if(num < i)
-                    return result;
                 //拿到文档实例
                 Document document = searcher.doc(topDocs.scoreDocs[i].doc);
                 //获取所有文档字段

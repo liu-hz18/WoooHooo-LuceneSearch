@@ -65,7 +65,7 @@ public class App
         System.out.println("索引文档添加成功");
     }
 
-    public static void incrementalIndexBuild()
+    public static void incrementalIndexBuild(String indexDir)
     {
         while(true)
             {
@@ -77,11 +77,11 @@ public class App
                     System.out.println("incrementalCount: " + incrementalCount);
                     for(int i=incrementalNewsNum; i<incrementalCount; i+=20000)
                     {
-                        addIndexDoc("./index", mongoDatabase, i);
+                        addIndexDoc(indexDir, mongoDatabase, i);
                     }
                     incrementalNewsNum = incrementalCount;
                     
-                        optimazeIndex("./index");
+                        optimazeIndex(indexDir);
                         break;
                 }
                 catch(Exception e)
@@ -100,9 +100,9 @@ public class App
         return true;
     }
 
-    public static Boolean verifyIncrementalThread()
+    public static Boolean verifyIncrementalThread(String indexDir)
     {
-        incrementalIndexBuild();
+        incrementalIndexBuild(indexDir);
         return true;
     }
     public static void main( String[] args )
