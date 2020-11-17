@@ -14,10 +14,8 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.document.IntPoint;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
@@ -30,7 +28,6 @@ import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 
 import java.nio.file.Paths;
 import java.util.*;
-import java.lang.Thread;
 
 import java.io.*;
 
@@ -46,14 +43,14 @@ public class App
         String indexPath = "./index";
             //初始化索引数据库
         createIndex(indexPath);
-        System.out.println("索引创建成功");
+        System.err.println("索引创建成功");
         //获取爬虫数据库
         MongoDatabase mongoDatabase = connectToMongo();
-        System.out.println("mongoClient connect");
+        System.err.println("mongoClient connect");
         //统计数据库内数据总量
         MongoCollection collection = mongoDatabase.getCollection("news");
         int count = (int)collection.countDocuments();
-        System.out.println("count: "+ count);
+        System.err.println("count: "+ count);
         //测试 只爬100000条
         //将爬虫数据库内数据建立索引 
         for(int i=0;i<50;i+=50)
@@ -62,7 +59,7 @@ public class App
             addIndexDoc(indexPath, mongoDatabase, i);
         }
         optimazeIndex("./index");
-        System.out.println("索引文档添加成功");
+        System.err.println("索引文档添加成功");
     }
 
     public static void incrementalIndexBuild(String indexDir)
@@ -74,7 +71,7 @@ public class App
                     MongoDatabase mongoDatabase = connectToMongo();
                     MongoCollection collection = mongoDatabase.getCollection("dynamicNews");
                     int incrementalCount = (int)collection.countDocuments();
-                    System.out.println("incrementalCount: " + incrementalCount);
+                    System.err.println("incrementalCount: " + incrementalCount);
                     for(int i=incrementalNewsNum; i<incrementalCount; i+=20000)
                     {
                         addIndexDoc(indexDir, mongoDatabase, i);
@@ -183,10 +180,6 @@ public class App
                 for (Map.Entry<String, Object> entry : entrySetList.get(i)) {
                     if(entry.getKey().equals("publish_time"))
                     {
-                        /*
-                        document.add(new StringField("publish_time", entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
-                        document.add(new SortedDocValuesField("publish_time", new BytesRef((entry.getValue()==null?"":entry.getValue()).toString().getBytes())));
-                        */
                         document.add(new TextField(entry.getKey(), entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
                         if(entry.getValue() == null) continue;
                         String newsTime = entry.getValue().toString();
@@ -201,7 +194,7 @@ public class App
                 writer.addDocument(document);
             }
             long luceneEndTime = System.currentTimeMillis();
-            System.out.println("lucene func: " + (luceneEndTime-luceneStartTime) + "ms");
+            System.err.println("lucene func: " + (luceneEndTime-luceneStartTime) + "ms");
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
