@@ -10,43 +10,30 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.SortedDocValuesField;
-import org.apache.lucene.document.BinaryPoint;
 import org.apache.lucene.document.IntPoint;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexableField;
-import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.PointRangeQuery;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.SortField;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.BytesRef;
 
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import javax.sound.midi.MidiSystem;
-import javax.swing.event.TreeWillExpandListener;
 
 import java.io.*;
 
@@ -57,7 +44,6 @@ import java.io.*;
 @RestController
 public class WelcomeController
 {
-    private long postTime = System.currentTimeMillis();
     //最低的相关度
     private float scoreOffset = 0.5f;
     //上次的结果个数
@@ -78,10 +64,6 @@ public class WelcomeController
                         @RequestParam(name="number")String number, @RequestParam(name="relation")int relation)
     {
         long begintime = System.currentTimeMillis();
-        //System.out.println("name= " + name);
-        //System.out.println("page=" +page);
-        //System.out.println("number=" + number);
-        //System.out.println("relation="+ relation);
         if(test == -1)
         {
             try{
@@ -99,15 +81,15 @@ public class WelcomeController
                 e.printStackTrace();
             }
         }
-        int _page = Integer.parseInt(page);
-        int _number = Integer.parseInt(number);
+        int intPage = Integer.parseInt(page);
+        int intNumber = Integer.parseInt(number);
         JSONObject result = new JSONObject();
         JSONArray newslist = null;
-        newslist = query("./index", name, _page, _number, relation);
+        newslist = query("./index", name, intPage, intNumber, relation);
         result.put("data", newslist);
         result.put("total", prevTotalNum);
         long endtinme=System.currentTimeMillis();
-        System.out.println("time: "+(endtinme - begintime) + "ms");
+        System.err.println("time: "+(endtinme - begintime) + "ms");
         return result;
     }
 
@@ -115,14 +97,12 @@ public class WelcomeController
     @RequestMapping(value = "/postNews", method = RequestMethod.POST)
     public String getNews(@RequestBody String object)
     {
-         //System.out.println(object);
         Date date = new Date();
-        System.out.println("receive news: "+ date.toString());
+        System.err.println("receive news: "+ date.toString());
         JSONObject newsObject =JSON.parseObject(object);
 
 
         JSONArray newsList = newsObject.getJSONArray("news");
-        //System.out.println(newsList.toString());
         addIndex("./index", newsList);
         return "receive";
     }
@@ -131,7 +111,6 @@ public class WelcomeController
     {
         IndexWriter writer = null;
         try{
-            int existNum = dynamicNewsNum / 100000;
             //获取目录
             Directory directory = FSDirectory.open(Paths.get(indexDir));
             //设置分词器
@@ -166,13 +145,12 @@ public class WelcomeController
         Document document = new Document();
         Set<Map.Entry<String, Object>> entrySet = newsObject.entrySet();
         for (Map.Entry<String, Object> entry : entrySet) {
-            //System.out.println(entry.getKey());
             if(entry.getKey().equals("publish_time"))
             {
                 document.add(new TextField(entry.getKey(), entry.getValue() == null ? "" : entry.getValue().toString(), Field.Store.YES));
                         if(entry.getValue() == null) continue;
                         String newsTime = entry.getValue().toString();
-                System.out.println(newsTime);
+                System.err.println(newsTime);
                         String year = newsTime.substring(0,4);
                         String month = newsTime.substring(5,7);
                         String day = newsTime.substring(8,10);
@@ -222,13 +200,12 @@ public class WelcomeController
 
     public JSONArray query(String indexDir, String queryContent, int page, int number, int timeRange)
     {
-        IndexReader reader = null;
         JSONArray result = new JSONArray();
         try {
             long queryStart = System.currentTimeMillis();
 
             Date curDate = new Date();
-            System.out.println(curDate.toString());
+            System.err.println(curDate.toString());
             //设置分词器
             Analyzer analyzer = new SmartChineseAnalyzer();
             //创建解析器
@@ -249,9 +226,8 @@ public class WelcomeController
                 BooleanQuery booleanQuery = new BooleanQuery.Builder().add(bcTitle).add(bcTime).build();
                 topDocs = searcher.search(booleanQuery, 100 * 3000);
             }
-            System.out.println("queryTime: " + (System.currentTimeMillis()-queryStart) + "ms");
+            System.err.println("queryTime: " + (System.currentTimeMillis()-queryStart) + "ms");
             long jsonStart = System.currentTimeMillis();
-            //for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
             int num = 0;
             int totalNum = topDocs.scoreDocs.length;
             long numStart = System.currentTimeMillis();
@@ -260,13 +236,12 @@ public class WelcomeController
                 if(topDocs.scoreDocs[num].score < scoreOffset)
                     break; 
             }
-            System.out.println("numTime: " +(System.currentTimeMillis() - numStart) + "ms");
+            System.err.println("numTime: " +(System.currentTimeMillis() - numStart) + "ms");
             prevTotalNum = num + 1;
             for(int i = page * number; i < page * number +number ;i++){
                 //拿到文档实例
                 Document document = searcher.doc(topDocs.scoreDocs[i].doc);
                 //获取所有文档字段
-                // List<IndexableField> fieldList = document.getFields();
                 //处理文档字段建立Json对象
                 JSONObject jsonObject = new JSONObject();
                 for(int j=0;j<8;j++)
@@ -293,7 +268,7 @@ public class WelcomeController
                 }
                 result.add(jsonObject);
             }
-            System.out.println("jsonTime: " + (System.currentTimeMillis() - jsonStart) + "ms");
+            System.err.println("jsonTime: " + (System.currentTimeMillis() - jsonStart) + "ms");
             prevTotalNum = topDocs.totalHits;
         } catch (Exception e) {
             e.printStackTrace();
@@ -313,24 +288,23 @@ public class WelcomeController
             case 1:
                 Date yesterday = new Date();
                 yesterday.setTime(date.getTime() - 1000*60*60*24);
-                System.out.println(dateFormat.format(yesterday));
+                System.err.println(dateFormat.format(yesterday));
                 int yesterdayInt = Integer.parseInt(dateFormat.format(yesterday));
                 return IntPoint.newRangeQuery("time", yesterdayInt, today);
             //周
             case 2:
                 Date lastWeek = new Date();
                 lastWeek.setTime(date.getTime() - 1000*60*60*24*7);
-                System.out.println(dateFormat.format(lastWeek));
+                System.err.println(dateFormat.format(lastWeek));
                 int lastWeekInt = Integer.parseInt(dateFormat.format(lastWeek));
                 return IntPoint.newRangeQuery("time", lastWeekInt, today);
             //月
             case 3:
                 Date lastMonth = new Date();
                 lastMonth.setTime(date.getTime() - (long)1000*60*60*24*30);
-                System.out.println(dateFormat.format(lastMonth));
+                System.err.println(dateFormat.format(lastMonth));
                 int lastMonthInt = Integer.parseInt(dateFormat.format(lastMonth));
                 return IntPoint.newRangeQuery("time", lastMonthInt, today);
-                //break;
             default:
                 return null;
         }
