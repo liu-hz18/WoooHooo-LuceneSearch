@@ -22,8 +22,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
+      <version>4.12</version>
     </dependency>
 
     <dependency>
@@ -62,13 +61,18 @@
     </dependency>
     <dependency>
       <groupId>org.mongodb</groupId>
-      <artifactId>mongodb-driver-sync</artifactId>
-      <version>4.1.1</version>
+      <artifactId>mongo-java-driver</artifactId>
+      <version>3.9.1</version>
   </dependency>
   <dependency>
     <groupId>org.mongodb</groupId>
-    <artifactId>mongodb-driver-legacy</artifactId>
-    <version>4.1.1</version>
+    <artifactId>mongodb-driver</artifactId>
+    <version>3.4.1</version>
+</dependency>
+<dependency>
+    <groupId>org.mongodb</groupId>
+    <artifactId>bson</artifactId>
+    <version>3.4.1</version>
 </dependency>
 <!-- 
 <dependency>
@@ -91,26 +95,14 @@
   <build>
     <finalName>luceneQuery</finalName>
     <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.6.0</version>
-        <executions>
-            <execution>
-                <goals>
-                    <goal>java</goal>
-                </goals>
-            </execution>
-        </executions>
-        <configuration>
-            <mainClass>com.wooohooo.luceneQuery.App</mainClass>
-        </configuration>
-    </plugin>
+      
+    
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <reportsDirectory>${project.basedir}/target/unittest</reportsDirectory>
+          
         </configuration>
       </plugin>
       <plugin>
@@ -128,9 +120,15 @@
               <goal>prepare-agent</goal>
             </goals>
             <configuration>
-               <destFile>${jacoco.output.dir}/jacoco.exec</destFile>
+               <destFile>${jacoco.output.dir}\jacoco.exec</destFile>
             </configuration>
           </execution>
+          <execution>
+            <id>check</id>
+            <goals>
+                <goal>check</goal>
+            </goals>
+        </execution>
           <execution>
             <id>post-unit-test</id>
             <phase>test</phase>
@@ -138,8 +136,8 @@
               <goal>report</goal>
             </goals>
             <configuration>
-              <dataFile>${jacoco.output.dir}/jacoco.exec</dataFile>
-              <outputDirectory>${jacoco.output.dir}/coverage</outputDirectory>
+              <dataFile>${jacoco.output.dir}\jacoco.exec</dataFile>
+              <outputDirectory>${jacoco.output.dir}\coverage</outputDirectory>
             </configuration>
           </execution>
         </executions>
@@ -147,11 +145,38 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.5</version>
+        </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.5</version>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.6.0</version>
+        <executions>
+            <execution>
+                <goals>
+                    <goal>java</goal>
+                </goals>
+            </execution>
+        </executions>
+        <configuration>
+            <mainClass>com.wooohooo.luceneQuery.App</mainClass>
+        </configuration>
+    </plugin>
     </plugins>
   </build>
 

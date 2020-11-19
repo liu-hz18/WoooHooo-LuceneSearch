@@ -1,9 +1,11 @@
 package com.wooohooo.luceneQuery;
 
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import com.mongodb.client.MongoDatabase;
 /**
  * Unit test for simple App.
  */
@@ -33,6 +35,26 @@ public class AppTest
      */
     public void testApp()
     {
-        assertTrue( true );
+        String []args = {};
+        String indexDir = "./index";
+        App.main(args);
+        assertTrue(App.verifyStaticThread());
+        assertTrue(App.verifyIncrementalThread(indexDir));
+        assertTrue(App.verifyIncrementalThread(null));
+    }
+
+    public void testConnectToMongo()
+    {
+        MongoDatabase dataBase = null;
+        int count = 100;
+        String indexDir = "./index";
+        assertTrue((dataBase = App.connectToMongo()) != null);
+        assertTrue(App.verifyCreateIndex(indexDir));
+        assertTrue(App.verifyCreateIndex(null));
+        assertTrue(App.verifyAddIndexDoc(indexDir, dataBase, count));
+        assertTrue(App.verifyAddIndexDoc(null, dataBase, count));
+        assertTrue(App.verifyOptimazeIndex(indexDir));
+        assertTrue(App.verifyOptimazeIndex(null));
     }
 }
+
